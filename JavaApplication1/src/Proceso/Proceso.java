@@ -13,11 +13,13 @@ public class Proceso {
     private int id;
     private String nombre;
     private EstadoProceso estado;
+    private SolicitudIO solicitudAsociada;
 
-    public Proceso(String nombre) {
+     public Proceso(String nombre, SolicitudIO solicitud) {
         this.id = contadorId++;
         this.nombre = nombre;
         this.estado = EstadoProceso.NUEVO;
+        this.solicitudAsociada = solicitud;
     }
 
     // Getters y Setters
@@ -25,4 +27,8 @@ public class Proceso {
     public String getNombre() { return nombre; }
     public EstadoProceso getEstado() { return estado; }
     public void setEstado(EstadoProceso estado) { this.estado = estado; }
+    
+    public SolicitudIO getSolicitudAsociada() {
+        return solicitudAsociada;
+        }
 }
