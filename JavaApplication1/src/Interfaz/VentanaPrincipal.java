@@ -173,6 +173,8 @@ public class VentanaPrincipal extends javax.swing.JFrame {
     //  Crear la instancia del gestor del sistema.
     this.sistemaManager = new SistemaManager();
     
+    jTree1.setCellRenderer(new IconTreeCellRenderer());
+    
     //  ¡CRUCIAL! Crear el gestor de listas. Este constructor CREA los modelos
     //    y los ASIGNA a las JList que ya fueron creadas por initComponents().
     //    Asegúrate de que los nombres (ListaNuevo, etc.) coincidan con tu diseño.
