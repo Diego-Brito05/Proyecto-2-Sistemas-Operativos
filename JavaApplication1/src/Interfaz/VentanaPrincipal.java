@@ -7,6 +7,9 @@ package Interfaz;
 import Archivo.Archivo;
 import Archivo.Directorio;
 import Archivo.EntradaSistemaArchivos;
+import Simulador.SistemaManager;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import javax.swing.JFrame;
@@ -14,6 +17,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.JSeparator;
+import javax.swing.Timer;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
@@ -31,7 +35,8 @@ public class VentanaPrincipal extends javax.swing.JFrame {
     private javax.swing.JMenuItem crearArchivoItem;
     private javax.swing.JMenuItem renombrarItem;
     private javax.swing.JMenuItem eliminarItem;
-    
+    private SistemaManager sistemaManager;
+    private Timer motorSimulador;
     
     
     private void inicializarMenuContextual() {
@@ -80,7 +85,12 @@ public class VentanaPrincipal extends javax.swing.JFrame {
      */
     public VentanaPrincipal() {
     initComponents();
+    
+    this.sistemaManager = new SistemaManager(); 
+    
     inicializarMenuContextual();
+    inicializarMotorSimulador();
+    actualizarTodasLasVistas();
     
     // --- AÑADE ESTE BLOQUE DE CÓDIGO ---
     jTree1.addMouseListener(new MouseAdapter() {
@@ -138,9 +148,9 @@ public class VentanaPrincipal extends javax.swing.JFrame {
     
     
     
-    // Pega aquí la lógica que tenías en tu constructor original
+    
     inicializarSistemaDeArchivos();
-    actualizarArbol(directorioRaiz);
+    actualizarArbol();
 
     // Y añade la configuración de la ventana
     this.setTitle("Simulador de Sistema de Archivos");
@@ -215,16 +225,61 @@ public class VentanaPrincipal extends javax.swing.JFrame {
      * 
      * @param raiz El directorio raíz de tu sistema de archivos.
      */
-    public void actualizarArbol(Directorio raiz) {
-        if (raiz == null) {
-            jTree1.setModel(null);
-            return;
-        }
+    public void actualizarArbol() {
+            // 1. Obtiene la raíz desde la fuente de verdad: el SistemaManager.
+            Directorio raiz = this.sistemaManager.getDirectorioRaiz();
+
+            if (raiz == null) {
+                jTree1.setModel(null);
+                return;
+            }
+
+            // El resto del código es idéntico
         DefaultMutableTreeNode rootNode = crearNodosDelArbol(raiz);
         DefaultTreeModel treeModel = new DefaultTreeModel(rootNode);
         jTree1.setModel(treeModel);
     }
      
+     /**
+     * Configura y arranca el Timer que actúa como el motor principal de la simulación.
+     */
+    private void inicializarMotorSimulador() {
+        int velocidadSimulacionMS = 1500; // 1.5 segundos por "tick"
+
+        // El ActionListener es el código que se ejecutará en cada "tick" del timer.
+        ActionListener tickListener = new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // --- CICLO PRINCIPAL DEL SIMULADOR ---
+                // Este código se ejecuta de forma segura en el hilo de la UI.
+
+                // 1. Mueve procesos de NUEVO -> BLOQUEADO (y sus solicitudes a la cola de E/S)
+                sistemaManager.admitirNuevosProcesos();
+
+                // 2. Ejecuta la siguiente operación de E/S según el planificador
+                sistemaManager.procesarSiguienteSolicitudIO();
+            
+                // 3. Notifica a la UI que debe redibujar todo
+                actualizarTodasLasVistas();
+            }
+        };
+
+        // Creamos el timer con la velocidad y el listener
+        this.motorSimulador = new Timer(velocidadSimulacionMS, tickListener);
+        
+        // Lo iniciamos
+        this.motorSimulador.start();
+    }
+    
+    
+    public void actualizarTodasLasVistas() {
+        actualizarArbol();
+        // actualizarTablaProcesos(); // Llama a los métodos que actualizan cada parte
+        // actualizarVistaDisco();
+        // actualizarTablaArchivos();
+        // etc.
+        System.out.println("Vistas actualizadas."); // Para debugging
+    }
      
     /**
      * This method is called from within the constructor to initialize the form.
