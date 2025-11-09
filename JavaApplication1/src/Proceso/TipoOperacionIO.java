@@ -10,6 +10,7 @@ package Proceso;
  */
 public enum TipoOperacionIO {
     CREAR,
+    CREAR_DIRECTORIO, // <-- AÑADE ESTA LÍNEA
     LEER,
     ACTUALIZAR,
     ELIMINAR

@@ -64,27 +64,29 @@ public class ListaEnlazada<T> {
         return actual.getDato();
     }
     
-    // Podrías necesitar un método para eliminar un dato específico
     public boolean eliminar(T dato) {
-        if(estaVacia()) return false;
-        
-        if(cabeza.getDato().equals(dato)){
-            cabeza = cabeza.getSiguiente();
-            tamano--;
-            return true;
-        }
-        
-        Nodo<T> actual = cabeza;
-        while(actual.getSiguiente() != null && !actual.getSiguiente().getDato().equals(dato)){
-            actual = actual.getSiguiente();
-        }
-        
-        if(actual.getSiguiente() != null){
-            actual.setSiguiente(actual.getSiguiente().getSiguiente());
-            tamano--;
-            return true;
-        }
-        
-        return false;
+     if (estaVacia()) return false;
+
+     // Caso 1: El elemento a eliminar es la cabeza de la lista
+     if (cabeza.getDato().equals(dato)) {
+         cabeza = cabeza.getSiguiente();
+         tamano--;
+         return true;
+    }
+
+     // Caso 2: El elemento está en otra parte de la lista
+     Nodo<T> actual = cabeza;
+     while (actual.getSiguiente() != null && !actual.getSiguiente().getDato().equals(dato)) {
+         actual = actual.getSiguiente();
+    }
+
+     // Si encontramos el nodo (actual.getSiguiente() es el que queremos borrar)
+     if (actual.getSiguiente() != null) {
+         actual.setSiguiente(actual.getSiguiente().getSiguiente());
+         tamano--;
+         return true;
+    }
+
+     return false; // No se encontró el dato en la lista
     }
 }

@@ -7,11 +7,14 @@ package Interfaz;
 import Archivo.Archivo;
 import Archivo.Directorio;
 import Archivo.EntradaSistemaArchivos;
+import EstructuraDeDatos.Cola;
+import Proceso.Proceso;
 import Simulador.SistemaManager;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import javax.swing.DefaultListModel;
 import javax.swing.JFrame;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
@@ -29,7 +32,6 @@ import javax.swing.tree.TreePath;
 public class VentanaPrincipal extends javax.swing.JFrame {
     
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(VentanaPrincipal.class.getName());
-    private Directorio directorioRaiz;
     private javax.swing.JPopupMenu popupMenu;
     private javax.swing.JMenuItem crearDirectorioItem;
     private javax.swing.JMenuItem crearArchivoItem;
@@ -37,24 +39,102 @@ public class VentanaPrincipal extends javax.swing.JFrame {
     private javax.swing.JMenuItem eliminarItem;
     private SistemaManager sistemaManager;
     private Timer motorSimulador;
-    
+    private javax.swing.DefaultListModel<Proceso> modeloNuevos;
+    private javax.swing.DefaultListModel<Proceso> modeloListos;
+    private javax.swing.DefaultListModel<Proceso> modeloEjecutando;
+    private javax.swing.DefaultListModel<Proceso> modeloBloqueados;
+    private javax.swing.DefaultListModel<Proceso> modeloTerminados;
+    private ProcesoListManager listManager;
     
     private void inicializarMenuContextual() {
+    
+    ///  Seccion del MenuPopup, incluyendo funciones para cada caso
         
+        
+    // Menu Popup para realizar los cambios al directorio desde el mismo Jtree, con cliick derecho
     popupMenu = new JPopupMenu();
     
     // --- Opción: Crear Directorio ---
     crearDirectorioItem = new JMenuItem("Crear Directorio");
     crearDirectorioItem.addActionListener(e -> {
-        // Lógica para crear un directorio
-        JOptionPane.showMessageDialog(this, "Acción: Crear Directorio");
+            Directorio dirPadre = null;
+
+            // 1. Obtener el nodo seleccionado del JTree.
+            DefaultMutableTreeNode nodoSeleccionado = (DefaultMutableTreeNode) jTree1.getLastSelectedPathComponent();
+
+            if (nodoSeleccionado == null) {
+                // CASO 1: No hay nada seleccionado. Usamos la raíz como padre por defecto.
+                dirPadre = sistemaManager.getDirectorioRaiz();
+            } else {
+                Object objetoUsuario = nodoSeleccionado.getUserObject();
+                if (objetoUsuario instanceof Directorio) {
+                    // CASO 2: Se seleccionó un directorio. Lo usamos como padre.
+                    dirPadre = (Directorio) objetoUsuario;
+                } else if (objetoUsuario instanceof Archivo) {
+                    // CASO 3 (Mejora): Se seleccionó un archivo. Usamos el directorio que lo contiene.
+                    dirPadre = ((Archivo) objetoUsuario).getPadre();
+                }
+            }
+
+            // 2. Comprobación final. Si por alguna razón no pudimos determinar un padre, no continuamos.
+            if (dirPadre == null) {
+                JOptionPane.showMessageDialog(this, "No se pudo determinar un directorio padre válido.", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            // 3. Pedir el nombre del nuevo directorio al usuario.
+            String nombre = JOptionPane.showInputDialog(this, "Crear directorio dentro de '" + dirPadre.getNombre() + "':", "Crear Directorio", JOptionPane.PLAIN_MESSAGE);
+
+            if (nombre != null && !nombre.trim().isEmpty()) {
+                sistemaManager.solicitarCreacionDirectorio(dirPadre, nombre.trim());
+        }
     });
-    
+
+
     // --- Opción: Crear Archivo ---
     crearArchivoItem = new JMenuItem("Crear Archivo");
     crearArchivoItem.addActionListener(e -> {
-        // Lógica para crear un archivo
-        JOptionPane.showMessageDialog(this, "Acción: Crear Archivo");
+        Directorio dirPadre = null;
+
+        // 1. La misma lógica inteligente para determinar el directorio padre.
+        DefaultMutableTreeNode nodoSeleccionado = (DefaultMutableTreeNode) jTree1.getLastSelectedPathComponent();
+
+        if (nodoSeleccionado == null) {
+            dirPadre = sistemaManager.getDirectorioRaiz();
+        } else {
+            Object objetoUsuario = nodoSeleccionado.getUserObject();
+            if (objetoUsuario instanceof Directorio) {
+                dirPadre = (Directorio) objetoUsuario;
+            } else if (objetoUsuario instanceof Archivo) {
+                dirPadre = ((Archivo) objetoUsuario).getPadre();
+            }
+        }
+
+        if (dirPadre == null) {
+            JOptionPane.showMessageDialog(this, "No se pudo determinar un directorio padre válido.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        // 2. Pedir datos al usuario (nombre y tamaño).
+        String nombre = JOptionPane.showInputDialog(this, "Nombre del nuevo archivo en '" + dirPadre.getNombre() + "':");
+        if (nombre == null || nombre.trim().isEmpty()) return;
+
+        String tamanoStr = JOptionPane.showInputDialog(this, "Tamaño en bloques para '" + nombre + "':");
+        if (tamanoStr == null) return;
+
+        try {
+            int tamano = Integer.parseInt(tamanoStr);
+            if (tamano <= 0) {
+                JOptionPane.showMessageDialog(this, "El tamaño debe ser un número positivo.", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            // 3. Llamar al manager para que inicie el proceso.
+            sistemaManager.solicitarCreacionArchivo(dirPadre, nombre.trim(), tamano);
+
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(this, "Por favor, ingrese un número válido para el tamaño.", "Error", JOptionPane.ERROR_MESSAGE);
+        }
     });
 
     // --- Opción: Renombrar ---
@@ -67,10 +147,13 @@ public class VentanaPrincipal extends javax.swing.JFrame {
     // --- Opción: Eliminar ---
     eliminarItem = new JMenuItem("Eliminar");
     eliminarItem.addActionListener(e -> {
-        // Lógica para eliminar
-        JOptionPane.showMessageDialog(this, "Acción: Eliminar");
-        // Aquí llamarías a un método que se encargue de la eliminación,
-        // libere los bloques y finalmente llame a actualizarArbol(directorioRaiz);
+    DefaultMutableTreeNode nodo = (DefaultMutableTreeNode) jTree1.getLastSelectedPathComponent();
+    if (nodo == null || nodo.isRoot()) return;
+    
+    EntradaSistemaArchivos entrada = (EntradaSistemaArchivos) nodo.getUserObject();
+    
+    // Simplemente solicita la eliminación. No la ejecuta.
+    sistemaManager.solicitarEliminacion(entrada);
     });
 
     // Añadir las opciones al menú emergente
@@ -84,15 +167,48 @@ public class VentanaPrincipal extends javax.swing.JFrame {
      * Creates new form VentanaPrincipal
      */
     public VentanaPrincipal() {
+    //  Siempre primero: NetBeans crea los componentes visuales (JTree, JList, etc.).
     initComponents();
     
-    this.sistemaManager = new SistemaManager(); 
+    //  Crear la instancia del gestor del sistema.
+    this.sistemaManager = new SistemaManager();
     
+    //  ¡CRUCIAL! Crear el gestor de listas. Este constructor CREA los modelos
+    //    y los ASIGNA a las JList que ya fueron creadas por initComponents().
+    //    Asegúrate de que los nombres (ListaNuevo, etc.) coincidan con tu diseño.
+    this.listManager = new ProcesoListManager(
+            this.ListaNuevo, 
+            this.ListaListo, 
+            this.ListaEjecutando, 
+            this.ListaBloqueado, 
+            this.ListaTerminado
+    );
+    
+    
+    //  Crear una única instancia de nuestro renderer.
+    ProcesoCellRenderer renderer = new ProcesoCellRenderer();
+    
+    //  Asignar el mismo renderer a las cinco listas.
+    this.ListaNuevo.setCellRenderer(renderer);
+    this.ListaListo.setCellRenderer(renderer);
+    this.ListaEjecutando.setCellRenderer(renderer);
+    this.ListaBloqueado.setCellRenderer(renderer);
+    this.ListaTerminado.setCellRenderer(renderer);
+    
+    // Inicializar funcionalidades que dependen de los componentes y del manager.
     inicializarMenuContextual();
     inicializarMotorSimulador();
+    
+    //  Realizar la primera carga de datos en la UI.
+    //    Ahora que el listManager existe, esta llamada funcionará correctamente.
     actualizarTodasLasVistas();
     
-    // --- AÑADE ESTE BLOQUE DE CÓDIGO ---
+    //  Configurar los detalles finales de la ventana.
+    this.setTitle("Simulador de Sistema de Archivos");
+    this.setLocationRelativeTo(null); // Centra la ventana
+    this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+    
     jTree1.addMouseListener(new MouseAdapter() {
         @Override
         public void mouseReleased(MouseEvent e) {
@@ -145,17 +261,7 @@ public class VentanaPrincipal extends javax.swing.JFrame {
             popupMenu.show(jTree1, x, y);
         }
     });
-    
-    
-    
-    
-    inicializarSistemaDeArchivos();
-    actualizarArbol();
-
-    // Y añade la configuración de la ventana
-    this.setTitle("Simulador de Sistema de Archivos");
-    this.setLocationRelativeTo(null);
-    this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+   
 }
     
     
@@ -188,43 +294,7 @@ public class VentanaPrincipal extends javax.swing.JFrame {
         return nodoDirectorio;
     }
      
-      private void inicializarSistemaDeArchivos() {
-        // Creamos la estructura de datos en memoria
-        this.directorioRaiz = new Directorio("C:", null); // La raíz no tiene padre
-        
-        Directorio users = new Directorio("Users", this.directorioRaiz);
-        Directorio system = new Directorio("System", this.directorioRaiz);
-        
-        Directorio admin = new Directorio("Admin", users);
-        Directorio docs = new Directorio("Documentos", admin);
-        
-        Archivo archivo1 = new Archivo("notas.txt", docs, 5, 10, 1, "blue");
-        Archivo archivo2 = new Archivo("plan.docx", docs, 12, 15, 1, "green");
-        Archivo boot = new Archivo("boot.ini", system, 1, 0, 0, "gray");
-
-        // Enlazamos la estructura
-        this.directorioRaiz.agregarEntrada(users);
-        this.directorioRaiz.agregarEntrada(system);
-        
-        users.agregarEntrada(admin);
-        
-        admin.agregarEntrada(docs);
-        
-        docs.agregarEntrada(archivo1);
-        docs.agregarEntrada(archivo2);
-        
-        system.agregarEntrada(boot);
-    }
     
-
-    // ----------- MÉTODOS PARA ACTUALIZAR EL JTREE -----------
-    
-    /**
-     * Actualiza todo el JTree para que refleje el estado actual
-     * del sistema de archivos simulado.
-     * 
-     * @param raiz El directorio raíz de tu sistema de archivos.
-     */
     public void actualizarArbol() {
             // 1. Obtiene la raíz desde la fuente de verdad: el SistemaManager.
             Directorio raiz = this.sistemaManager.getDirectorioRaiz();
@@ -248,21 +318,23 @@ public class VentanaPrincipal extends javax.swing.JFrame {
 
         // El ActionListener es el código que se ejecutará en cada "tick" del timer.
         ActionListener tickListener = new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                // --- CICLO PRINCIPAL DEL SIMULADOR ---
-                // Este código se ejecuta de forma segura en el hilo de la UI.
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            // --- CICLO COMPLETO DEL SIMULADOR ---
 
-                // 1. Mueve procesos de NUEVO -> BLOQUEADO (y sus solicitudes a la cola de E/S)
-                sistemaManager.admitirNuevosProcesos();
+            // 1. Fase de Admisión: Mueve de NUEVO a LISTO.
+            sistemaManager.admitirNuevosProcesos();
 
-                // 2. Ejecuta la siguiente operación de E/S según el planificador
-                sistemaManager.procesarSiguienteSolicitudIO();
-            
-                // 3. Notifica a la UI que debe redibujar todo
-                actualizarTodasLasVistas();
-            }
-        };
+            // 2. Fase de Preparación de E/S: Mueve de LISTO a BLOQUEADO.
+            sistemaManager.prepararIO();
+
+            // 3. Fase de Ejecución de E/S: Mueve de BLOQUEADO a TERMINADO (pasando por EJECUTANDO).
+            sistemaManager.procesarSiguienteSolicitudIO();
+
+            // 4. Actualiza toda la interfaz gráfica para reflejar los cambios de este "tick".
+            actualizarTodasLasVistas();
+        }
+    };
 
         // Creamos el timer con la velocidad y el listener
         this.motorSimulador = new Timer(velocidadSimulacionMS, tickListener);
@@ -272,14 +344,59 @@ public class VentanaPrincipal extends javax.swing.JFrame {
     }
     
     
-    public void actualizarTodasLasVistas() {
-        actualizarArbol();
-        // actualizarTablaProcesos(); // Llama a los métodos que actualizan cada parte
-        // actualizarVistaDisco();
-        // actualizarTablaArchivos();
-        // etc.
-        System.out.println("Vistas actualizadas."); // Para debugging
+    private void actualizarListasDeProcesos() {
+    // Actualizar la lista de NUEVOS
+    actualizarUnaLista(modeloNuevos, sistemaManager.getColaNuevos());
+    
+    // Actualizar la lista de LISTOS
+    actualizarUnaLista(modeloListos, sistemaManager.getColaListos());
+    
+    // Actualizar la lista de BLOQUEADOS
+    actualizarUnaLista(modeloBloqueados, sistemaManager.getColaBloqueados());
+    
+    // Actualizar la lista de TERMINADOS
+    actualizarUnaLista(modeloTerminados, sistemaManager.getColaTerminados());
+
+    // Actualizar el proceso en EJECUCIÓN (que no es una cola)
+    modeloEjecutando.clear();
+    Proceso enEjecucion = sistemaManager.getProcesoEnEjecucionIO();
+    if (enEjecucion != null) {
+        modeloEjecutando.addElement(enEjecucion);
     }
+}
+
+/**
+ * Método de utilidad para actualizar un DefaultListModel a partir de una de tus Colas.
+ * @param modelo El modelo de la JList a actualizar.
+ * @param cola La cola de procesos del SistemaManager.
+ */
+    private void actualizarUnaLista(DefaultListModel<Proceso> modelo, Cola<Proceso> cola) {
+    modelo.clear();
+    
+    // Truco para iterar tu cola sin destruirla:
+    Cola<Proceso> aux = new Cola<>();
+    while (!cola.estaVacia()) {
+        Proceso p = cola.desencolar();
+        modelo.addElement(p); // Añadir al modelo para la JList
+        aux.encolar(p);      // Guardar en la cola auxiliar
+    }
+    // Devolver los elementos a la cola original
+    while(!aux.estaVacia()) {
+        cola.encolar(aux.desencolar());
+    }
+}
+    
+    public void actualizarTodasLasVistas() {
+    actualizarArbol();
+
+    // Esta es la llamada correcta que debería funcionar
+     if (listManager != null) {
+         listManager.actualizarListas(sistemaManager);
+    }
+
+    // Para depurar, vamos a añadir logs
+    System.out.println("Actualizando vistas. Procesos en cola NUEVO: " + sistemaManager.getColaNuevos().getTamano());
+ }
      
     /**
      * This method is called from within the constructor to initialize the form.
@@ -290,11 +407,11 @@ public class VentanaPrincipal extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        jTabbedPane1 = new javax.swing.JTabbedPane();
-        jPanel1 = new javax.swing.JPanel();
+        Configuracion = new javax.swing.JTabbedPane();
+        Arbol = new javax.swing.JPanel();
         jScrollPane1 = new javax.swing.JScrollPane();
         jTree1 = new javax.swing.JTree();
-        jPanel2 = new javax.swing.JPanel();
+        VisualizadorDisco = new javax.swing.JPanel();
         jPanel3 = new javax.swing.JPanel();
         Simulador = new javax.swing.JPanel();
         jScrollPane17 = new javax.swing.JScrollPane();
@@ -325,31 +442,31 @@ public class VentanaPrincipal extends javax.swing.JFrame {
 
         jScrollPane1.setViewportView(jTree1);
 
-        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
-        jPanel1.setLayout(jPanel1Layout);
-        jPanel1Layout.setHorizontalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+        javax.swing.GroupLayout ArbolLayout = new javax.swing.GroupLayout(Arbol);
+        Arbol.setLayout(ArbolLayout);
+        ArbolLayout.setHorizontalGroup(
+            ArbolLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 1593, Short.MAX_VALUE)
         );
-        jPanel1Layout.setVerticalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+        ArbolLayout.setVerticalGroup(
+            ArbolLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 786, Short.MAX_VALUE)
         );
 
-        jTabbedPane1.addTab("Arbol", jPanel1);
+        Configuracion.addTab("Arbol", Arbol);
 
-        javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
-        jPanel2.setLayout(jPanel2Layout);
-        jPanel2Layout.setHorizontalGroup(
-            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+        javax.swing.GroupLayout VisualizadorDiscoLayout = new javax.swing.GroupLayout(VisualizadorDisco);
+        VisualizadorDisco.setLayout(VisualizadorDiscoLayout);
+        VisualizadorDiscoLayout.setHorizontalGroup(
+            VisualizadorDiscoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGap(0, 1593, Short.MAX_VALUE)
         );
-        jPanel2Layout.setVerticalGroup(
-            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+        VisualizadorDiscoLayout.setVerticalGroup(
+            VisualizadorDiscoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGap(0, 786, Short.MAX_VALUE)
         );
 
-        jTabbedPane1.addTab("tab2", jPanel2);
+        Configuracion.addTab("Visualizador Disco", VisualizadorDisco);
 
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
@@ -362,7 +479,7 @@ public class VentanaPrincipal extends javax.swing.JFrame {
             .addGap(0, 786, Short.MAX_VALUE)
         );
 
-        jTabbedPane1.addTab("tab3", jPanel3);
+        Configuracion.addTab("Configuracion", jPanel3);
 
         Simulador.setBackground(new java.awt.Color(102, 204, 255));
 
@@ -526,18 +643,18 @@ public class VentanaPrincipal extends javax.swing.JFrame {
                 .addGap(16, 16, 16))
         );
 
-        jTabbedPane1.addTab("Procesos", Simulador);
+        Configuracion.addTab("Procesos", Simulador);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jTabbedPane1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 1593, javax.swing.GroupLayout.PREFERRED_SIZE)
+            .addComponent(Configuracion, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 1593, javax.swing.GroupLayout.PREFERRED_SIZE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addComponent(jTabbedPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 821, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(Configuracion, javax.swing.GroupLayout.PREFERRED_SIZE, 821, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(0, 0, Short.MAX_VALUE))
         );
 
@@ -582,14 +699,17 @@ public class VentanaPrincipal extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JPanel Arbol;
+    private javax.swing.JTabbedPane Configuracion;
     private javax.swing.JToggleButton IndicadorActivo;
     private javax.swing.JToggleButton IniciarPausarButton;
-    private javax.swing.JList<Proceso.Proceso> ListaBloqueado;
-    private javax.swing.JList<Proceso.Proceso> ListaEjecutando;
-    private javax.swing.JList<Proceso.Proceso> ListaListo;
-    private javax.swing.JList<Proceso.Proceso> ListaNuevo;
-    private javax.swing.JList<Proceso.Proceso> ListaTerminado;
+    private javax.swing.JList<Proceso> ListaBloqueado;
+    private javax.swing.JList<Proceso> ListaEjecutando;
+    private javax.swing.JList<Proceso> ListaListo;
+    private javax.swing.JList<Proceso> ListaNuevo;
+    private javax.swing.JList<Proceso> ListaTerminado;
     private javax.swing.JPanel Simulador;
+    private javax.swing.JPanel VisualizadorDisco;
     private javax.swing.JTextArea enEjec;
     private javax.swing.JLabel jLabel27;
     private javax.swing.JLabel jLabel29;
@@ -599,8 +719,6 @@ public class VentanaPrincipal extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel34;
     private javax.swing.JLabel jLabel43;
     private javax.swing.JLabel jLabel72;
-    private javax.swing.JPanel jPanel1;
-    private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane17;
@@ -609,7 +727,6 @@ public class VentanaPrincipal extends javax.swing.JFrame {
     private javax.swing.JScrollPane jScrollPane21;
     private javax.swing.JScrollPane jScrollPane22;
     private javax.swing.JScrollPane jScrollPane24;
-    private javax.swing.JTabbedPane jTabbedPane1;
     private javax.swing.JTree jTree1;
     private javax.swing.JTextArea modoAct;
     // End of variables declaration//GEN-END:variables
