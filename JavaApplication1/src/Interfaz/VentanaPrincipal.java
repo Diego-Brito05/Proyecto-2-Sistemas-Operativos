@@ -39,20 +39,57 @@ public class VentanaPrincipal extends javax.swing.JFrame {
     private javax.swing.JMenuItem eliminarItem;
     private SistemaManager sistemaManager;
     private Timer motorSimulador;
-    private javax.swing.DefaultListModel<Proceso> modeloNuevos;
-    private javax.swing.DefaultListModel<Proceso> modeloListos;
     private javax.swing.DefaultListModel<Proceso> modeloEjecutando;
     private javax.swing.DefaultListModel<Proceso> modeloBloqueados;
     private javax.swing.DefaultListModel<Proceso> modeloTerminados;
     private ProcesoListManager listManager;
+    
+    private DefaultMutableTreeNode nodoClickeado; 
     
     private void inicializarMenuContextual() {
     
     ///  Seccion del MenuPopup, incluyendo funciones para cada caso
         
         
-    // Menu Popup para realizar los cambios al directorio desde el mismo Jtree, con cliick derecho
+    // Menu Popup para realizar los cambios al directorio desde el mismo Jtree, con click derecho
     popupMenu = new JPopupMenu();
+    
+    
+     this.eliminarItem = new JMenuItem("Eliminar");
+    
+    // 3. AÑADE el ActionListener a ESA MISMA INSTANCIA (this.eliminarItem).
+    this.eliminarItem.addActionListener(e -> {
+        // --- PUNTO DE PRUEBA ---
+        // Pon un print aquí. Si esto no aparece, el listener no está conectado.
+        System.out.println("ActionListener de Eliminar FUE DISPARADO."); 
+        
+        if (this.nodoClickeado == null) {
+            System.out.println("El nodo clickeado es null. Saliendo.");
+            return;
+        }
+
+        if (this.nodoClickeado.isRoot()) {
+            System.out.println("Se intentó eliminar la raíz.");
+            JOptionPane.showMessageDialog(this, "No se puede eliminar el directorio raíz.", "Acción no permitida", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+    
+        EntradaSistemaArchivos entrada = (EntradaSistemaArchivos) this.nodoClickeado.getUserObject();
+    
+        int confirm = JOptionPane.showConfirmDialog(
+            this, 
+            "¿Estás seguro de que quieres eliminar '" + entrada.getNombre() + "'?", 
+            "Confirmar Eliminación", 
+            JOptionPane.YES_NO_OPTION
+        );
+
+        if (confirm == JOptionPane.YES_OPTION) {
+            System.out.println("Solicitando eliminación para: " + entrada.getNombre());
+            sistemaManager.solicitarEliminacion(entrada);
+        } else {
+            System.out.println("Eliminación cancelada por el usuario.");
+        }
+        });
     
     // --- Opción: Crear Directorio ---
     crearDirectorioItem = new JMenuItem("Crear Directorio");
@@ -145,15 +182,10 @@ public class VentanaPrincipal extends javax.swing.JFrame {
     });
 
     // --- Opción: Eliminar ---
-    eliminarItem = new JMenuItem("Eliminar");
     eliminarItem.addActionListener(e -> {
-    DefaultMutableTreeNode nodo = (DefaultMutableTreeNode) jTree1.getLastSelectedPathComponent();
-    if (nodo == null || nodo.isRoot()) return;
     
-    EntradaSistemaArchivos entrada = (EntradaSistemaArchivos) nodo.getUserObject();
-    
-    // Simplemente solicita la eliminación. No la ejecuta.
-    sistemaManager.solicitarEliminacion(entrada);
+        System.out.println("Solicitando eliminación ");
+        
     });
 
     // Añadir las opciones al menú emergente
@@ -163,6 +195,8 @@ public class VentanaPrincipal extends javax.swing.JFrame {
     popupMenu.add(new JSeparator()); // Una línea separadora
     popupMenu.add(eliminarItem);
     }
+    
+    
     /**
      * Creates new form VentanaPrincipal
      */
@@ -175,12 +209,12 @@ public class VentanaPrincipal extends javax.swing.JFrame {
     
     jTree1.setCellRenderer(new IconTreeCellRenderer());
     
+    
     //  ¡CRUCIAL! Crear el gestor de listas. Este constructor CREA los modelos
     //    y los ASIGNA a las JList que ya fueron creadas por initComponents().
     //    Asegúrate de que los nombres (ListaNuevo, etc.) coincidan con tu diseño.
     this.listManager = new ProcesoListManager(
-            this.ListaNuevo, 
-            this.ListaListo, 
+             
             this.ListaEjecutando, 
             this.ListaBloqueado, 
             this.ListaTerminado
@@ -191,18 +225,19 @@ public class VentanaPrincipal extends javax.swing.JFrame {
     ProcesoCellRenderer renderer = new ProcesoCellRenderer();
     
     //  Asignar el mismo renderer a las cinco listas.
-    this.ListaNuevo.setCellRenderer(renderer);
-    this.ListaListo.setCellRenderer(renderer);
+   
     this.ListaEjecutando.setCellRenderer(renderer);
     this.ListaBloqueado.setCellRenderer(renderer);
     this.ListaTerminado.setCellRenderer(renderer);
+    
+    
     
     // Inicializar funcionalidades que dependen de los componentes y del manager.
     inicializarMenuContextual();
     inicializarMotorSimulador();
     
     //  Realizar la primera carga de datos en la UI.
-    //    Ahora que el listManager existe, esta llamada funcionará correctamente.
+    actualizarArbol();
     actualizarTodasLasVistas();
     
     //  Configurar los detalles finales de la ventana.
@@ -212,56 +247,52 @@ public class VentanaPrincipal extends javax.swing.JFrame {
 
     
     jTree1.addMouseListener(new MouseAdapter() {
-        @Override
-        public void mouseReleased(MouseEvent e) {
-            if (e.isPopupTrigger()) {
-                mostrarMenu(e);
-            }
+    @Override
+    public void mousePressed(MouseEvent e) {
+        // Manejar el evento cuando se presiona el botón, crucial para macOS/Linux
+        if (e.isPopupTrigger()) {
+            mostrarMenu(e);
         }
-        
-        @Override
-        public void mousePressed(MouseEvent e) {
-             if (e.isPopupTrigger()) {
-                mostrarMenu(e);
-            }
-        }
-        
-        private void mostrarMenu(MouseEvent e) {
-            // Obtener la ruta del árbol para la ubicación del clic
-            int x = e.getX();
-            int y = e.getY();
-            TreePath path = jTree1.getPathForLocation(x, y);
+    }
 
-            if (path == null) {
-                // El usuario hizo clic en un área vacía, no hacemos nada
-                return;
-            }
-            
-            // Seleccionar el nodo en el que se hizo clic derecho
+    @Override
+    public void mouseReleased(MouseEvent e) {
+        // Manejar el evento cuando se suelta el botón, crucial para Windows
+        if (e.isPopupTrigger()) {
+            mostrarMenu(e);
+        }
+    }
+
+    private void mostrarMenu(MouseEvent e) {
+        int x = e.getX();
+        int y = e.getY();
+        TreePath path = jTree1.getPathForLocation(x, y);
+
+        // --- Depuración: Ver qué ruta encontramos ---
+        System.out.println("Clic derecho detectado. Ruta encontrada: " + path);
+
+        if (path == null) {
+            // Clic en un área vacía
+            System.out.println("Clic en área vacía. Estableciendo nodoClickeado a null.");
+            nodoClickeado = null;
+            // No seleccionamos nada en el árbol
+            jTree1.clearSelection();
+        } else {
+            // Clic sobre un nodo
+            // ¡Importante! Asegurarnos de que el nodo se seleccione visualmente.
             jTree1.setSelectionPath(path);
             
-            // Obtener el objeto de usuario (nuestro Archivo o Directorio)
-            DefaultMutableTreeNode nodoSeleccionado = (DefaultMutableTreeNode) path.getLastPathComponent();
-            Object objetoUsuario = nodoSeleccionado.getUserObject();
-            
-            // --- LÓGICA CONTEXTUAL ---
-            if (objetoUsuario instanceof Directorio) {
-                // Si es un directorio, habilitamos todo
-                crearDirectorioItem.setEnabled(true);
-                crearArchivoItem.setEnabled(true);
-                renombrarItem.setEnabled(true);
-                eliminarItem.setEnabled(true);
-            } else if (objetoUsuario instanceof Archivo) {
-                // Si es un archivo, deshabilitamos las opciones de crear
-                crearDirectorioItem.setEnabled(false);
-                crearArchivoItem.setEnabled(false);
-                renombrarItem.setEnabled(true);
-                eliminarItem.setEnabled(true);
-            }
-            
-            // Mostrar el menú en la posición del cursor
-            popupMenu.show(jTree1, x, y);
+            // Asignamos el nodo encontrado a nuestra variable miembro.
+            nodoClickeado = (DefaultMutableTreeNode) path.getLastPathComponent();
+            System.out.println("Clic en nodo: " + nodoClickeado.getUserObject().toString() + ". Variable nodoClickeado asignada.");
         }
+
+        // configuramos qué opciones del menú están habilitadas
+        configurarOpcionesMenu();
+        
+        // Mostramos el menú
+        popupMenu.show(jTree1, x, y);
+    }
     });
    
 }
@@ -296,6 +327,35 @@ public class VentanaPrincipal extends javax.swing.JFrame {
         return nodoDirectorio;
     }
      
+     
+    private void configurarOpcionesMenu() {
+    boolean hayNodoSeleccionado = (nodoClickeado != null);
+    
+    // Por defecto, habilitar las opciones de creación
+    crearDirectorioItem.setEnabled(true);
+    crearArchivoItem.setEnabled(true);
+
+    if (hayNodoSeleccionado) {
+        // Hay un nodo seleccionado, ajustamos las opciones
+        boolean esRaiz = nodoClickeado.isRoot();
+        Object objetoUsuario = nodoClickeado.getUserObject();
+
+        // Eliminar y Renombrar solo se habilitan si no es la raíz
+        eliminarItem.setEnabled(!esRaiz);
+        renombrarItem.setEnabled(!esRaiz);
+
+        if (objetoUsuario instanceof Archivo) {
+            // No se puede crear nada dentro de un archivo
+            crearDirectorioItem.setEnabled(false);
+            crearArchivoItem.setEnabled(false);
+        }
+    } else {
+        // No hay nada seleccionado (clic en área vacía)
+        // Solo se puede crear, no eliminar ni renombrar.
+        eliminarItem.setEnabled(false);
+        renombrarItem.setEnabled(false);
+    }
+    }
     
     public void actualizarArbol() {
             // 1. Obtiene la raíz desde la fuente de verdad: el SistemaManager.
@@ -312,46 +372,37 @@ public class VentanaPrincipal extends javax.swing.JFrame {
         jTree1.setModel(treeModel);
     }
      
-     /**
-     * Configura y arranca el Timer que actúa como el motor principal de la simulación.
-     */
+    
+    /**
+    * Configura y arranca el Timer que actúa como el motor principal de la simulación.
+    * Con el modelo de 3 estados, el motor es muy simple.
+    */
     private void inicializarMotorSimulador() {
         int velocidadSimulacionMS = 1500; // 1.5 segundos por "tick"
 
-        // El ActionListener es el código que se ejecutará en cada "tick" del timer.
+        // El ActionListener que se ejecutará en cada "tick" del timer.
         ActionListener tickListener = new ActionListener() {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            // --- CICLO COMPLETO DEL SIMULADOR ---
+            @Override
+            public void actionPerformed(ActionEvent e) {
 
-            // 1. Fase de Admisión: Mueve de NUEVO a LISTO.
-            sistemaManager.admitirNuevosProcesos();
+                // 1. Fase de Ejecución de E/S: Mueve un proceso de BLOQUEADO a TERMINADO,
+                //    pasando por el estado EJECUTANDO.
+                sistemaManager.procesarSiguienteSolicitudIO();
 
-            // 2. Fase de Preparación de E/S: Mueve de LISTO a BLOQUEADO.
-            sistemaManager.prepararIO();
+                // 2. Actualiza toda la interfaz gráfica para reflejar cualquier cambio.
+                actualizarTodasLasVistas();
+            }
+       };
 
-            // 3. Fase de Ejecución de E/S: Mueve de BLOQUEADO a TERMINADO (pasando por EJECUTANDO).
-            sistemaManager.procesarSiguienteSolicitudIO();
-
-            // 4. Actualiza toda la interfaz gráfica para reflejar los cambios de este "tick".
-            actualizarTodasLasVistas();
-        }
-    };
-
-        // Creamos el timer con la velocidad y el listener
-        this.motorSimulador = new Timer(velocidadSimulacionMS, tickListener);
-        
-        // Lo iniciamos
-        this.motorSimulador.start();
-    }
+    // Creamos el timer con la velocidad y el listener.
+    this.motorSimulador = new Timer(velocidadSimulacionMS, tickListener);
+    
+    // Lo iniciamos para que comience a hacer "ticks".
+    this.motorSimulador.start();
+}
     
     
     private void actualizarListasDeProcesos() {
-    // Actualizar la lista de NUEVOS
-    actualizarUnaLista(modeloNuevos, sistemaManager.getColaNuevos());
-    
-    // Actualizar la lista de LISTOS
-    actualizarUnaLista(modeloListos, sistemaManager.getColaListos());
     
     // Actualizar la lista de BLOQUEADOS
     actualizarUnaLista(modeloBloqueados, sistemaManager.getColaBloqueados());
@@ -389,15 +440,19 @@ public class VentanaPrincipal extends javax.swing.JFrame {
 }
     
     public void actualizarTodasLasVistas() {
-    actualizarArbol();
 
     // Esta es la llamada correcta que debería funcionar
      if (listManager != null) {
          listManager.actualizarListas(sistemaManager);
     }
-
+     
+    //  Solo actualizamos el JTree si el manager nos dice que algo cambió.
+     if (sistemaManager.verificarYResetearCambioEnEstructura()) {
+            System.out.println("¡Cambio detectado en el árbol! Actualizando JTree...");
+            actualizarArbol();
+        }
     // Para depurar, vamos a añadir logs
-    System.out.println("Actualizando vistas. Procesos en cola NUEVO: " + sistemaManager.getColaNuevos().getTamano());
+    System.out.println("Actualizando vistas. Procesos en cola Bloqueado: " + sistemaManager.getColaBloqueados().getTamano());
  }
      
     /**
@@ -422,23 +477,13 @@ public class VentanaPrincipal extends javax.swing.JFrame {
         IndicadorActivo = new javax.swing.JToggleButton();
         jScrollPane18 = new javax.swing.JScrollPane();
         ListaTerminado = new javax.swing.JList<>();
-        jLabel29 = new javax.swing.JLabel();
         jLabel31 = new javax.swing.JLabel();
-        jLabel32 = new javax.swing.JLabel();
         jLabel33 = new javax.swing.JLabel();
-        jScrollPane21 = new javax.swing.JScrollPane();
-        ListaNuevo = new javax.swing.JList<>();
-        jScrollPane22 = new javax.swing.JScrollPane();
-        ListaListo = new javax.swing.JList<>();
         jLabel34 = new javax.swing.JLabel();
         jScrollPane24 = new javax.swing.JScrollPane();
         ListaBloqueado = new javax.swing.JList<>();
         jLabel43 = new javax.swing.JLabel();
-        IniciarPausarButton = new javax.swing.JToggleButton();
         modoAct = new javax.swing.JTextArea();
-        jScrollPane2 = new javax.swing.JScrollPane();
-        enEjec = new javax.swing.JTextArea();
-        jLabel72 = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -468,7 +513,7 @@ public class VentanaPrincipal extends javax.swing.JFrame {
             .addGap(0, 786, Short.MAX_VALUE)
         );
 
-        Configuracion.addTab("Visualizador Disco", VisualizadorDisco);
+        Configuracion.addTab("Tabla de asignacion de archivos", VisualizadorDisco);
 
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
@@ -500,24 +545,12 @@ public class VentanaPrincipal extends javax.swing.JFrame {
 
         jScrollPane18.setViewportView(ListaTerminado);
 
-        jLabel29.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
-        jLabel29.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        jLabel29.setText("Listo");
-
         jLabel31.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         jLabel31.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jLabel31.setText("Ejecutando");
 
-        jLabel32.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
-        jLabel32.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        jLabel32.setText("Nuevo");
-
         jLabel33.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
         jLabel33.setText("Modo:");
-
-        jScrollPane21.setViewportView(ListaNuevo);
-
-        jScrollPane22.setViewportView(ListaListo);
 
         jLabel34.setFont(new java.awt.Font("Segoe UI", 3, 18)); // NOI18N
         jLabel34.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
@@ -528,124 +561,72 @@ public class VentanaPrincipal extends javax.swing.JFrame {
         jLabel43.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jLabel43.setText("Bloqueado");
 
-        IniciarPausarButton.setText("Iniciar");
-        IniciarPausarButton.addItemListener(new java.awt.event.ItemListener() {
-            public void itemStateChanged(java.awt.event.ItemEvent evt) {
-                IniciarPausarButtonItemStateChanged(evt);
-            }
-        });
-        IniciarPausarButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                IniciarPausarButtonActionPerformed(evt);
-            }
-        });
-
         modoAct.setColumns(20);
         modoAct.setRows(5);
-
-        enEjec.setColumns(20);
-        enEjec.setRows(5);
-        jScrollPane2.setViewportView(enEjec);
-
-        jLabel72.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
-        jLabel72.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        jLabel72.setText("Log de ejecución");
 
         javax.swing.GroupLayout SimuladorLayout = new javax.swing.GroupLayout(Simulador);
         Simulador.setLayout(SimuladorLayout);
         SimuladorLayout.setHorizontalGroup(
             SimuladorLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(SimuladorLayout.createSequentialGroup()
-                .addGap(19, 19, 19)
                 .addGroup(SimuladorLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(SimuladorLayout.createSequentialGroup()
-                        .addGroup(SimuladorLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(SimuladorLayout.createSequentialGroup()
-                                .addGroup(SimuladorLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(jScrollPane21, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addComponent(IniciarPausarButton, javax.swing.GroupLayout.PREFERRED_SIZE, 82, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                .addGap(18, 18, 18)
-                                .addGroup(SimuladorLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addGroup(SimuladorLayout.createSequentialGroup()
-                                        .addComponent(jLabel33, javax.swing.GroupLayout.PREFERRED_SIZE, 70, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                        .addComponent(modoAct, javax.swing.GroupLayout.PREFERRED_SIZE, 146, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                    .addGroup(SimuladorLayout.createSequentialGroup()
-                                        .addComponent(jScrollPane22, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                        .addGap(18, 18, 18)
-                                        .addComponent(jScrollPane17, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                        .addGap(18, 18, 18)
-                                        .addComponent(jScrollPane24, javax.swing.GroupLayout.PREFERRED_SIZE, 116, javax.swing.GroupLayout.PREFERRED_SIZE))))
-                            .addGroup(SimuladorLayout.createSequentialGroup()
-                                .addGap(30, 30, 30)
-                                .addComponent(jLabel32, javax.swing.GroupLayout.PREFERRED_SIZE, 56, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(73, 73, 73)
-                                .addComponent(jLabel29, javax.swing.GroupLayout.PREFERRED_SIZE, 81, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(57, 57, 57)
-                                .addComponent(jLabel31, javax.swing.GroupLayout.PREFERRED_SIZE, 73, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(63, 63, 63)
-                                .addComponent(jLabel43, javax.swing.GroupLayout.PREFERRED_SIZE, 73, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                        .addGap(38, 38, 38)
-                        .addComponent(jLabel27, javax.swing.GroupLayout.PREFERRED_SIZE, 75, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(0, 0, Short.MAX_VALUE))
-                    .addGroup(SimuladorLayout.createSequentialGroup()
+                        .addGap(19, 19, 19)
                         .addComponent(IndicadorActivo)
+                        .addGap(37, 37, 37)
                         .addGroup(SimuladorLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(SimuladorLayout.createSequentialGroup()
-                                .addGap(37, 37, 37)
-                                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 530, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                                .addComponent(jScrollPane24, javax.swing.GroupLayout.PREFERRED_SIZE, 116, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(18, 18, 18)
+                                .addComponent(jScrollPane17, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(18, 18, 18)
+                                .addComponent(jScrollPane18, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE))
                             .addGroup(SimuladorLayout.createSequentialGroup()
-                                .addGap(236, 236, 236)
-                                .addComponent(jLabel72, javax.swing.GroupLayout.PREFERRED_SIZE, 149, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(0, 0, Short.MAX_VALUE))))
+                                .addComponent(jLabel33, javax.swing.GroupLayout.PREFERRED_SIZE, 70, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(modoAct, javax.swing.GroupLayout.PREFERRED_SIZE, 146, javax.swing.GroupLayout.PREFERRED_SIZE))))
                     .addGroup(SimuladorLayout.createSequentialGroup()
-                        .addGap(548, 548, 548)
-                        .addComponent(jScrollPane18, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(35, 906, Short.MAX_VALUE))))
-            .addGroup(SimuladorLayout.createSequentialGroup()
-                .addGap(645, 645, 645)
-                .addComponent(jLabel34, javax.swing.GroupLayout.PREFERRED_SIZE, 98, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addGap(110, 110, 110)
+                        .addComponent(jLabel43, javax.swing.GroupLayout.PREFERRED_SIZE, 73, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGroup(SimuladorLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(SimuladorLayout.createSequentialGroup()
+                                .addGap(490, 490, 490)
+                                .addComponent(jLabel34, javax.swing.GroupLayout.PREFERRED_SIZE, 98, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGroup(SimuladorLayout.createSequentialGroup()
+                                .addGap(61, 61, 61)
+                                .addComponent(jLabel31, javax.swing.GroupLayout.PREFERRED_SIZE, 73, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(67, 67, 67)
+                                .addComponent(jLabel27, javax.swing.GroupLayout.PREFERRED_SIZE, 75, javax.swing.GroupLayout.PREFERRED_SIZE)))))
+                .addContainerGap(822, Short.MAX_VALUE))
         );
         SimuladorLayout.setVerticalGroup(
             SimuladorLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(SimuladorLayout.createSequentialGroup()
-                .addGap(8, 8, 8)
-                .addGroup(SimuladorLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addGroup(SimuladorLayout.createSequentialGroup()
-                        .addComponent(IndicadorActivo, javax.swing.GroupLayout.PREFERRED_SIZE, 31, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(88, 88, 88))
-                    .addGroup(SimuladorLayout.createSequentialGroup()
-                        .addComponent(jLabel72)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 105, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)))
+                .addGap(26, 26, 26)
+                .addComponent(IndicadorActivo, javax.swing.GroupLayout.PREFERRED_SIZE, 31, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(88, 88, 88)
                 .addComponent(jLabel34)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(SimuladorLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel29)
                     .addComponent(jLabel31)
-                    .addComponent(jLabel32)
                     .addComponent(jLabel43)
                     .addComponent(jLabel27))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(SimuladorLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(jScrollPane21, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 541, Short.MAX_VALUE)
-                    .addComponent(jScrollPane22, javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane17, javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane24, javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane18))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(SimuladorLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jScrollPane18)
+                    .addGroup(SimuladorLayout.createSequentialGroup()
+                        .addGroup(SimuladorLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                            .addComponent(jScrollPane17, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 557, Short.MAX_VALUE)
+                            .addComponent(jScrollPane24, javax.swing.GroupLayout.Alignment.LEADING))
+                        .addGap(0, 0, Short.MAX_VALUE)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(SimuladorLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(modoAct, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, SimuladorLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                        .addComponent(jLabel33)
-                        .addComponent(IniciarPausarButton)))
+                    .addComponent(jLabel33))
                 .addGap(16, 16, 16))
         );
 
-        Configuracion.addTab("Procesos", Simulador);
+        Configuracion.addTab("Visualizador Discos", Simulador);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -666,14 +647,6 @@ public class VentanaPrincipal extends javax.swing.JFrame {
     private void IndicadorActivoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_IndicadorActivoActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_IndicadorActivoActionPerformed
-
-    private void IniciarPausarButtonItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_IniciarPausarButtonItemStateChanged
-
-    }//GEN-LAST:event_IniciarPausarButtonItemStateChanged
-
-    private void IniciarPausarButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_IniciarPausarButtonActionPerformed
-
-    }//GEN-LAST:event_IniciarPausarButtonActionPerformed
 
     /**
      * @param args the command line arguments
@@ -704,30 +677,20 @@ public class VentanaPrincipal extends javax.swing.JFrame {
     private javax.swing.JPanel Arbol;
     private javax.swing.JTabbedPane Configuracion;
     private javax.swing.JToggleButton IndicadorActivo;
-    private javax.swing.JToggleButton IniciarPausarButton;
     private javax.swing.JList<Proceso> ListaBloqueado;
     private javax.swing.JList<Proceso> ListaEjecutando;
-    private javax.swing.JList<Proceso> ListaListo;
-    private javax.swing.JList<Proceso> ListaNuevo;
     private javax.swing.JList<Proceso> ListaTerminado;
     private javax.swing.JPanel Simulador;
     private javax.swing.JPanel VisualizadorDisco;
-    private javax.swing.JTextArea enEjec;
     private javax.swing.JLabel jLabel27;
-    private javax.swing.JLabel jLabel29;
     private javax.swing.JLabel jLabel31;
-    private javax.swing.JLabel jLabel32;
     private javax.swing.JLabel jLabel33;
     private javax.swing.JLabel jLabel34;
     private javax.swing.JLabel jLabel43;
-    private javax.swing.JLabel jLabel72;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane17;
     private javax.swing.JScrollPane jScrollPane18;
-    private javax.swing.JScrollPane jScrollPane2;
-    private javax.swing.JScrollPane jScrollPane21;
-    private javax.swing.JScrollPane jScrollPane22;
     private javax.swing.JScrollPane jScrollPane24;
     private javax.swing.JTree jTree1;
     private javax.swing.JTextArea modoAct;

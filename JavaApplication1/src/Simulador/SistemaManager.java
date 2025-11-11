@@ -31,9 +31,10 @@ public class SistemaManager {
     private Bloque[] disco;
     private static final int TAMANO_DISCO = 200;
     
+      // --- NUEVA BANDERA DE ESTADO ---
+    private boolean huboCambioEnEstructura = false;
+    
     // Colas de estados de proceso
-    private Cola<Proceso> colaNuevos;
-    private Cola<Proceso> colaListos;
     private Proceso procesoEnEjecucionIO; // Proceso cuya E/S se está ejecutando
     private Cola<Proceso> colaBloqueados;
     private Cola<Proceso> colaTerminados;
@@ -46,8 +47,7 @@ public class SistemaManager {
         inicializarDisco();
         directorioRaiz = new Directorio("C:", null);
         
-        this.colaNuevos = new Cola<>();
-        this.colaListos = new Cola<>();
+
         this.procesoEnEjecucionIO = null;
         this.colaBloqueados = new Cola<>();
         this.colaTerminados = new Cola<>();
@@ -74,48 +74,53 @@ public class SistemaManager {
 
     // --- MÉTODOS DE SOLICITUD (LLAMADOS DESDE LA UI) ---
     public void solicitarCreacionArchivo(Directorio padre, String nombre, int tamano) {
-        int proximoId = Proceso.peekNextId(); 
-        SolicitudIO solicitud = new SolicitudIO(proximoId, TipoOperacionIO.CREAR, padre.getNombre() + "/" + nombre, tamano, encontrarPrimerBloqueLibre());
+        int proximoId = Proceso.peekNextId();
+        String rutaCompleta = construirRutaCompleta(padre) + "/" + nombre;
+        SolicitudIO solicitud = new SolicitudIO(proximoId, TipoOperacionIO.CREAR, rutaCompleta, tamano, encontrarPrimerBloqueLibre());
+
         Proceso p = new Proceso("Crear " + nombre, solicitud);
-        p.setEstado(EstadoProceso.NUEVO);
-        colaNuevos.encolar(p);
+        p.setEstado(EstadoProceso.BLOQUEADO); 
+
+        colaBloqueados.encolar(p);             
+        colaIO.encolar(solicitud);             
+
+        System.out.println("Proceso " + p.getId() + " creado y encolado directamente en BLOQUEADO.");
     }
     
-    /**
-    * Crea un proceso para solicitar la eliminación de un archivo o directorio.
-    * Este método es llamado por la UI y no ejecuta la eliminación directamente.
-    * @param entrada La entrada del sistema de archivos (Archivo o Directorio) a eliminar.
-    */
+        /**
+        * Crea un proceso para solicitar la eliminación de un archivo o directorio.
+        * Este método es llamado por la UI y no ejecuta la eliminación directamente.
+        * @param entrada La entrada del sistema de archivos (Archivo o Directorio) a eliminar.
+        */
         public void solicitarEliminacion(EntradaSistemaArchivos entrada) {
             if (entrada == null || entrada.getPadre() == null) {
                 System.err.println("Error: No se puede solicitar la eliminación de la raíz o de un objeto nulo.");
                 return;
             }
 
-            // 1. Obtener el próximo ID para la solicitud y el proceso.
+            // 1. Crear la SolicitudIO
             int proximoId = Proceso.peekNextId();
-
-            // 2. Construir la ruta completa del elemento a eliminar.
             String ruta = construirRutaCompleta(entrada);
-
-            // 3. Determinar el bloque objetivo para los algoritmos de planificación.
-            //    Si es un archivo, es su primer bloque. Si es un directorio, podemos usar 0 o el bloque del padre.
             int bloqueObjetivo = 0;
             if (entrada instanceof Archivo) {
                 bloqueObjetivo = ((Archivo) entrada).getPrimerBloque();
             }
-
-            // 4. Crear la solicitud de E/S. El tamaño no es relevante para ELIMINAR.
             SolicitudIO solicitud = new SolicitudIO(proximoId, TipoOperacionIO.ELIMINAR, ruta, 0, bloqueObjetivo);
 
-            // 5. Crear el proceso con su solicitud asociada.
+            // 2. Crear el Proceso
             Proceso p = new Proceso("Eliminar " + entrada.getNombre(), solicitud);
-            p.setEstado(EstadoProceso.NUEVO);
 
-            // 6. Encolar el proceso en la cola de NUEVOS para que el simulador lo recoja.
-            colaNuevos.encolar(p);
+            // 3. Establecer el estado directamente a BLOQUEADO
+            p.setEstado(EstadoProceso.BLOQUEADO);
 
-            System.out.println("Proceso " + p.getId() + " encolado para eliminar '" + entrada.getNombre() + "'.");
+            // 4. Encolar el proceso en la cola de BLOQUEADOS
+            colaBloqueados.encolar(p);
+
+            // 5. Encolar la solicitud de E/S inmediatamente en la cola del disco
+            colaIO.encolar(solicitud);
+            // ---------------------
+
+            System.out.println("Proceso " + p.getId() + " encolado para eliminar '" + entrada.getNombre() + "' y puesto en BLOQUEADO.");
         }
         
         /**
@@ -125,19 +130,18 @@ public class SistemaManager {
         */
         public void solicitarCreacionDirectorio(Directorio padre, String nombre) {
             int proximoId = Proceso.peekNextId();
-
-            // Construimos la ruta completa para la solicitud.
             String rutaCompleta = construirRutaCompleta(padre) + "/" + nombre;
-
-            // Un directorio no tiene tamaño en bloques ni un bloque objetivo inicial específico. Usamos 0.
             SolicitudIO solicitud = new SolicitudIO(proximoId, TipoOperacionIO.CREAR_DIRECTORIO, rutaCompleta, 0, 0);
 
             Proceso p = new Proceso("Crear Dir " + nombre, solicitud);
-            p.setEstado(EstadoProceso.NUEVO);
-            colaNuevos.encolar(p);
+            p.setEstado(EstadoProceso.BLOQUEADO); 
 
-            System.out.println("Proceso " + p.getId() + " encolado para crear directorio '" + nombre + "'.");
+            colaBloqueados.encolar(p);            
+            colaIO.encolar(solicitud);             
+
+            System.out.println("Proceso " + p.getId() + " creado y encolado directamente en BLOQUEADO.");
         }
+
 
    /**
     * Método de utilidad para construir la ruta completa de una entrada del sistema de archivos,
@@ -158,36 +162,7 @@ public class SistemaManager {
     
     // --- MÉTODOS DEL CICLO DEL SIMULADOR ---
     
-            /**
-          * Mueve los procesos de la cola NUEVO a la cola LISTO.
-          * Representa la admisión de un proceso en el sistema.
-          */
-        public void admitirNuevosProcesos() {
-             if (!colaNuevos.estaVacia()) {
-                 Proceso p = colaNuevos.desencolar();
-                 p.setEstado(EstadoProceso.LISTO);
-                 colaListos.encolar(p);
-                 System.out.println("Proceso " + p.getId() + " admitido y movido a LISTO.");
-            }
-        }
-         
-         /**
-        * Mueve los procesos de la cola LISTO a la cola BLOQUEADO.
-        * En este paso, se genera la SolicitudIO y se encola para el disco.
-        */
-       public void prepararIO() {
-           if (!colaListos.estaVacia()) {
-               Proceso p = colaListos.desencolar();
-
-               // Generar y encolar la solicitud de E/S
-               colaIO.encolar(p.getSolicitudAsociada());
-
-               // Mover el proceso a la cola de bloqueados
-               p.setEstado(EstadoProceso.BLOQUEADO);
-               colaBloqueados.encolar(p);
-               System.out.println("Proceso " + p.getId() + " preparado para E/S y movido a BLOQUEADO.");
-           }
-       }
+          
     
     public void procesarSiguienteSolicitudIO() {
                 if (procesoEnEjecucionIO != null || colaIO.estaVacia()) {
@@ -271,7 +246,12 @@ public class SistemaManager {
 
             // 4. Crear el objeto Archivo y añadirlo al modelo de datos (esto ahora funciona)
             Archivo nuevoArchivo = new Archivo(nombreArchivo, padre, solicitud.getTamanoEnBloques(), primerBloque, solicitud.getIdProceso(), "green");
-            return padre.agregarEntrada(nuevoArchivo); 
+            boolean exito = padre.agregarEntrada(nuevoArchivo);
+    
+            if (exito) {
+                this.huboCambioEnEstructura = true; // <-- ACTIVAR LA BANDERA
+            }
+            return exito;
         }
         
         /**
@@ -304,7 +284,12 @@ public class SistemaManager {
 
             // 3. Crear el nuevo objeto Directorio y añadirlo a su padre.
             Directorio nuevoDirectorio = new Directorio(nombreDirectorio, padre);
-            return padre.agregarEntrada(nuevoDirectorio);
+            boolean exito = padre.agregarEntrada(nuevoDirectorio);
+
+        if (exito) {
+        this.huboCambioEnEstructura = true; // <-- ACTIVAR LA BANDERA
+        }
+        return exito;
         }
         
     /**
@@ -330,7 +315,12 @@ public class SistemaManager {
         }
 
         // 2. Iniciar el proceso de borrado recursivo y desconexión
-        return eliminarRecursivamente(entradaAEliminar);
+        boolean exito = eliminarRecursivamente(entradaAEliminar);
+    
+        if (exito) {
+        this.huboCambioEnEstructura = true; // <-- ACTIVAR LA BANDERA
+        }
+        return exito;
     }
 
 
@@ -404,9 +394,7 @@ public class SistemaManager {
 
     // --- GETTERS PARA LA UI ---
     public Directorio getDirectorioRaiz() { return directorioRaiz; }
-    public Cola<Proceso> getColaNuevos() { return colaNuevos; }
     public Proceso getProcesoEnEjecucionIO() { return procesoEnEjecucionIO; }
-    public Cola<Proceso> getColaListos() { return colaListos;}
     public Cola<Proceso> getColaBloqueados() { return colaBloqueados; }
     public Cola<Proceso> getColaTerminados() { return colaTerminados; }
     public Cola<SolicitudIO> getColaIO() { return colaIO; }
@@ -506,6 +494,20 @@ public class SistemaManager {
 
             return actual; // Devolvemos la entrada final encontrada
         }
+        
+         /**
+     * Comprueba si ha ocurrido un cambio en la estructura de archivos/directorios
+     * desde la última vez que se comprobó.
+     * Si hubo un cambio, devuelve true y resetea la bandera a false.
+     * @return true si la estructura del árbol necesita ser actualizada, false en caso contrario.
+     */
+    public boolean verificarYResetearCambioEnEstructura() {
+        if (this.huboCambioEnEstructura) {
+            this.huboCambioEnEstructura = false; // Reseteamos la bandera
+            return true; // Informamos que sí hubo un cambio
+        }
+        return false; // No hubo cambios
+    }
         
         
         

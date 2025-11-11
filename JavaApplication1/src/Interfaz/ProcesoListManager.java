@@ -21,8 +21,6 @@ import javax.swing.JList;
 public class ProcesoListManager {
 
     // Los modelos que contendrán los datos de los procesos
-    private final DefaultListModel<Proceso> modeloNuevos;
-    private final DefaultListModel<Proceso> modeloListos;
     private final DefaultListModel<Proceso> modeloEjecutando;
     private final DefaultListModel<Proceso> modeloBloqueados;
     private final DefaultListModel<Proceso> modeloTerminados;
@@ -30,23 +28,17 @@ public class ProcesoListManager {
     /**
      * El constructor recibe las JList de la ventana principal para
      * crear y asignarles sus respectivos modelos.
-     * @param listaNuevo La JList para la cola de Nuevos.
-     * @param listaListo La JList para la cola de Listos.
      * @param listaEjecutando La JList para el proceso en Ejecución.
      * @param listaBloqueado La JList para la cola de Bloqueados.
      * @param listaTerminado La JList para la cola de Terminados.
      */
-    public ProcesoListManager(JList<Proceso> listaNuevo, JList<Proceso> listaListo, JList<Proceso> listaEjecutando, JList<Proceso> listaBloqueado, JList<Proceso> listaTerminado) {
+    public ProcesoListManager(JList<Proceso> listaEjecutando, JList<Proceso> listaBloqueado, JList<Proceso> listaTerminado) {
         // 1. Crear una instancia de cada modelo
-        this.modeloNuevos = new DefaultListModel<>();
-        this.modeloListos = new DefaultListModel<>();
         this.modeloEjecutando = new DefaultListModel<>();
         this.modeloBloqueados = new DefaultListModel<>();
         this.modeloTerminados = new DefaultListModel<>();
         
         // 2. Asignar cada modelo a su JList correspondiente
-        listaNuevo.setModel(this.modeloNuevos);
-        listaListo.setModel(this.modeloListos);
         listaEjecutando.setModel(this.modeloEjecutando);
         listaBloqueado.setModel(this.modeloBloqueados);
         listaTerminado.setModel(this.modeloTerminados);
@@ -59,8 +51,6 @@ public class ProcesoListManager {
      */
     public void actualizarListas(SistemaManager manager) {
         // Actualizar cada una de las listas
-        copiarColaAModelo(manager.getColaNuevos(), modeloNuevos);
-        copiarColaAModelo(manager.getColaListos(), modeloListos);
         copiarColaAModelo(manager.getColaBloqueados(), modeloBloqueados);
         copiarColaAModelo(manager.getColaTerminados(), modeloTerminados);
         
