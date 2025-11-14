@@ -44,6 +44,7 @@ public class VentanaPrincipal extends javax.swing.JFrame {
     private javax.swing.DefaultListModel<Proceso> modeloTerminados;
     private ProcesoListManager listManager;
     
+    private ModoUsuario modoActual;
     private DefaultMutableTreeNode nodoClickeado; 
     
     private void inicializarMenuContextual() {
@@ -54,14 +55,12 @@ public class VentanaPrincipal extends javax.swing.JFrame {
     // Menu Popup para realizar los cambios al directorio desde el mismo Jtree, con click derecho
     popupMenu = new JPopupMenu();
     
+    this.modoActual = ModoUsuario.ADMINISTRADOR;
+        actualizarUIModo();
+    this.eliminarItem = new JMenuItem("Eliminar");
     
-     this.eliminarItem = new JMenuItem("Eliminar");
-    
-    // 3. AÑADE el ActionListener a ESA MISMA INSTANCIA (this.eliminarItem).
+   
     this.eliminarItem.addActionListener(e -> {
-        // --- PUNTO DE PRUEBA ---
-        // Pon un print aquí. Si esto no aparece, el listener no está conectado.
-        System.out.println("ActionListener de Eliminar FUE DISPARADO."); 
         
         if (this.nodoClickeado == null) {
             System.out.println("El nodo clickeado es null. Saliendo.");
@@ -177,8 +176,35 @@ public class VentanaPrincipal extends javax.swing.JFrame {
     // --- Opción: Renombrar ---
     renombrarItem = new JMenuItem("Renombrar");
     renombrarItem.addActionListener(e -> {
-        // Lógica para renombrar
-        JOptionPane.showMessageDialog(this, "Acción: Renombrar");
+        // Usar la variable 'nodoClickeado' que ya tenemos.
+        if (this.nodoClickeado == null) {
+            return; // No hay nada seleccionado
+        }
+
+        // Prevenir el renombrado de la raíz.
+        if (this.nodoClickeado.isRoot()) {
+            JOptionPane.showMessageDialog(this, "No se puede renombrar el directorio raíz.", "Acción no permitida", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        EntradaSistemaArchivos entrada = (EntradaSistemaArchivos) this.nodoClickeado.getUserObject();
+
+        // Pedir el nuevo nombre al usuario, sugiriendo el nombre actual.
+        String nuevoNombre = (String) JOptionPane.showInputDialog(
+            this,
+            "Ingrese el nuevo nombre para '" + entrada.getNombre() + "':",
+            "Renombrar",
+            JOptionPane.PLAIN_MESSAGE,
+            null,
+            null,
+            entrada.getNombre() // Valor inicial en el campo de texto
+        );
+
+        //  Validar la entrada del usuario.
+        if (nuevoNombre != null && !nuevoNombre.trim().isEmpty() && !nuevoNombre.equals(entrada.getNombre())) {
+            //  Llamar al SistemaManager para que inicie el proceso.
+            sistemaManager.solicitarRenombrar(entrada, nuevoNombre.trim());
+        }
     });
 
     // --- Opción: Eliminar ---
@@ -329,32 +355,42 @@ public class VentanaPrincipal extends javax.swing.JFrame {
      
      
     private void configurarOpcionesMenu() {
-    boolean hayNodoSeleccionado = (nodoClickeado != null);
-    
-    // Por defecto, habilitar las opciones de creación
-    crearDirectorioItem.setEnabled(true);
-    crearArchivoItem.setEnabled(true);
-
-    if (hayNodoSeleccionado) {
-        // Hay un nodo seleccionado, ajustamos las opciones
-        boolean esRaiz = nodoClickeado.isRoot();
-        Object objetoUsuario = nodoClickeado.getUserObject();
-
-        // Eliminar y Renombrar solo se habilitan si no es la raíz
-        eliminarItem.setEnabled(!esRaiz);
-        renombrarItem.setEnabled(!esRaiz);
-
-        if (objetoUsuario instanceof Archivo) {
-            // No se puede crear nada dentro de un archivo
+        // --- USUARIO ---
+        if (this.modoActual == ModoUsuario.USUARIO) {
+            // Si estamos en modo USUARIO, deshabilitamos todas las operaciones de escritura.
             crearDirectorioItem.setEnabled(false);
             crearArchivoItem.setEnabled(false);
+            renombrarItem.setEnabled(false);
+            eliminarItem.setEnabled(false);
+
+            // Salimos del método. No necesitamos hacer más comprobaciones.
+            return; 
         }
-    } else {
-        // No hay nada seleccionado (clic en área vacía)
-        // Solo se puede crear, no eliminar ni renombrar.
-        eliminarItem.setEnabled(false);
-        renombrarItem.setEnabled(false);
-    }
+
+        // --- ADMINISTRADOR ---
+
+        boolean hayNodoSeleccionado = (nodoClickeado != null);
+
+        // Por defecto, habilitar las opciones de creación
+        crearDirectorioItem.setEnabled(true);
+        crearArchivoItem.setEnabled(true);
+
+        if (hayNodoSeleccionado) {
+            boolean esRaiz = nodoClickeado.isRoot();
+            Object objetoUsuario = nodoClickeado.getUserObject();
+
+            eliminarItem.setEnabled(!esRaiz);
+            renombrarItem.setEnabled(!esRaiz);
+
+            if (objetoUsuario instanceof Archivo) {
+                crearDirectorioItem.setEnabled(false);
+                crearArchivoItem.setEnabled(false);
+            }
+        } else {
+            // Clic en área vacía, solo se puede crear.
+            eliminarItem.setEnabled(false);
+            renombrarItem.setEnabled(false);
+        }
     }
     
     public void actualizarArbol() {
@@ -441,19 +477,40 @@ public class VentanaPrincipal extends javax.swing.JFrame {
     
     public void actualizarTodasLasVistas() {
 
-    // Esta es la llamada correcta que debería funcionar
-     if (listManager != null) {
-         listManager.actualizarListas(sistemaManager);
-    }
-     
-    //  Solo actualizamos el JTree si el manager nos dice que algo cambió.
-     if (sistemaManager.verificarYResetearCambioEnEstructura()) {
-            System.out.println("¡Cambio detectado en el árbol! Actualizando JTree...");
-            actualizarArbol();
+        // Esta es la llamada correcta que debería funcionar
+         if (listManager != null) {
+             listManager.actualizarListas(sistemaManager);
         }
-    // Para depurar, vamos a añadir logs
-    System.out.println("Actualizando vistas. Procesos en cola Bloqueado: " + sistemaManager.getColaBloqueados().getTamano());
- }
+
+        //  Solo actualizamos el JTree si el manager nos dice que algo cambió.
+         if (sistemaManager.verificarYResetearCambioEnEstructura()) {
+                System.out.println("¡Cambio detectado en el árbol! Actualizando JTree...");
+                actualizarArbol();
+            }
+        // Para depurar, vamos a añadir logs
+        System.out.println("Actualizando vistas. Procesos en cola Bloqueado: " + sistemaManager.getColaBloqueados().getTamano());
+    }
+    
+    
+    
+    /**
+    * Método auxiliar para actualizar los textos de la UI que indican el modo actual.
+    */
+    private void actualizarUIModo() {
+        if (this.modoActual == ModoUsuario.ADMINISTRADOR) {
+            // Actualiza el texto del botón
+            modoToggleButton.setText("Modo: Administrador");
+            // Actualiza el JTextArea si lo estás usando para esto
+            modoAct.setText("ADMINISTRADOR");
+            System.out.println("Cambiado a Modo Administrador.");
+        } else {
+            modoToggleButton.setText("Modo: Usuario");
+            modoAct.setText("USUARIO");
+            System.out.println("Cambiado a Modo Usuario.");
+        }
+    }
+    
+    
      
     /**
      * This method is called from within the constructor to initialize the form.
@@ -484,6 +541,7 @@ public class VentanaPrincipal extends javax.swing.JFrame {
         ListaBloqueado = new javax.swing.JList<>();
         jLabel43 = new javax.swing.JLabel();
         modoAct = new javax.swing.JTextArea();
+        modoToggleButton = new javax.swing.JToggleButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -564,6 +622,13 @@ public class VentanaPrincipal extends javax.swing.JFrame {
         modoAct.setColumns(20);
         modoAct.setRows(5);
 
+        modoToggleButton.setText("Modo: Administrador");
+        modoToggleButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                modoToggleButtonActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout SimuladorLayout = new javax.swing.GroupLayout(Simulador);
         Simulador.setLayout(SimuladorLayout);
         SimuladorLayout.setHorizontalGroup(
@@ -574,7 +639,7 @@ public class VentanaPrincipal extends javax.swing.JFrame {
                         .addGap(19, 19, 19)
                         .addComponent(IndicadorActivo)
                         .addGap(37, 37, 37)
-                        .addGroup(SimuladorLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(SimuladorLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                             .addGroup(SimuladorLayout.createSequentialGroup()
                                 .addComponent(jScrollPane24, javax.swing.GroupLayout.PREFERRED_SIZE, 116, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addGap(18, 18, 18)
@@ -584,7 +649,9 @@ public class VentanaPrincipal extends javax.swing.JFrame {
                             .addGroup(SimuladorLayout.createSequentialGroup()
                                 .addComponent(jLabel33, javax.swing.GroupLayout.PREFERRED_SIZE, 70, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(modoAct, javax.swing.GroupLayout.PREFERRED_SIZE, 146, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                                .addComponent(modoAct, javax.swing.GroupLayout.PREFERRED_SIZE, 146, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(modoToggleButton))))
                     .addGroup(SimuladorLayout.createSequentialGroup()
                         .addGap(110, 110, 110)
                         .addComponent(jLabel43, javax.swing.GroupLayout.PREFERRED_SIZE, 73, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -606,7 +673,7 @@ public class VentanaPrincipal extends javax.swing.JFrame {
                 .addComponent(IndicadorActivo, javax.swing.GroupLayout.PREFERRED_SIZE, 31, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(88, 88, 88)
                 .addComponent(jLabel34)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGap(18, 18, 18)
                 .addGroup(SimuladorLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel31)
                     .addComponent(jLabel43)
@@ -621,7 +688,9 @@ public class VentanaPrincipal extends javax.swing.JFrame {
                         .addGap(0, 0, Short.MAX_VALUE)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(SimuladorLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(modoAct, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, SimuladorLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(modoAct, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(modoToggleButton))
                     .addComponent(jLabel33))
                 .addGap(16, 16, 16))
         );
@@ -647,6 +716,20 @@ public class VentanaPrincipal extends javax.swing.JFrame {
     private void IndicadorActivoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_IndicadorActivoActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_IndicadorActivoActionPerformed
+
+    private void modoToggleButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_modoToggleButtonActionPerformed
+        // El JToggleButton tiene un estado "seleccionado"
+    if (modoToggleButton.isSelected()) {
+        // Si está seleccionado, estamos en modo Administrador
+        this.modoActual = ModoUsuario.ADMINISTRADOR;
+    } else {
+        // Si no está seleccionado, estamos en modo Usuario
+        this.modoActual = ModoUsuario.USUARIO;
+    }
+    
+    // Actualizamos la UI para que refleje el cambio
+    actualizarUIModo();
+    }//GEN-LAST:event_modoToggleButtonActionPerformed
 
     /**
      * @param args the command line arguments
@@ -694,5 +777,6 @@ public class VentanaPrincipal extends javax.swing.JFrame {
     private javax.swing.JScrollPane jScrollPane24;
     private javax.swing.JTree jTree1;
     private javax.swing.JTextArea modoAct;
+    private javax.swing.JToggleButton modoToggleButton;
     // End of variables declaration//GEN-END:variables
 }

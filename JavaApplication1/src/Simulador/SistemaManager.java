@@ -141,6 +141,29 @@ public class SistemaManager {
 
             System.out.println("Proceso " + p.getId() + " creado y encolado directamente en BLOQUEADO.");
         }
+        
+        /**
+        * Crea un proceso para solicitar el renombrado de un archivo o directorio.
+        * @param entrada La entrada del sistema de archivos a renombrar.
+        * @param nuevoNombre El nuevo nombre para la entrada.
+        */
+        public void solicitarRenombrar(EntradaSistemaArchivos entrada, String nuevoNombre) {
+            int proximoId = Proceso.peekNextId();
+            String ruta = construirRutaCompleta(entrada);
+
+            // Para renombrar, el bloque objetivo puede ser el del archivo o 0 para un directorio.
+            int bloqueObjetivo = (entrada instanceof Archivo) ? ((Archivo) entrada).getPrimerBloque() : 0;
+
+            SolicitudIO solicitud = new SolicitudIO(proximoId, TipoOperacionIO.ACTUALIZAR, ruta, 0, bloqueObjetivo, nuevoNombre);
+
+            Proceso p = new Proceso("Renombrar a " + nuevoNombre, solicitud);
+            p.setEstado(EstadoProceso.BLOQUEADO);
+
+            colaBloqueados.encolar(p);
+            colaIO.encolar(solicitud);
+
+            System.out.println("Proceso " + p.getId() + " encolado para renombrar '" + entrada.getNombre() + "' a '" + nuevoNombre + "'.");
+       }
 
 
    /**
@@ -202,19 +225,20 @@ public class SistemaManager {
          * @return true si la operación fue exitosa, false en caso contrario.
          */
         private boolean ejecutarOperacionReal(SolicitudIO solicitud) {
-                switch (solicitud.getTipo()) {
-                case CREAR:
-                    return _ejecutarCreacionArchivo(solicitud);
-                case CREAR_DIRECTORIO: // <-- AÑADIR ESTE CASO
-                    return _ejecutarCreacionDirectorio(solicitud);
-                case ELIMINAR:
-                    return _ejecutarEliminacion(solicitud);
-                case ACTUALIZAR:
-                    // return _ejecutarRenombrado(solicitud);
-                default:
-                    return false;
+            switch (solicitud.getTipo()) {
+            case CREAR:
+                return _ejecutarCreacionArchivo(solicitud);
+            case CREAR_DIRECTORIO:
+                return _ejecutarCreacionDirectorio(solicitud);
+            case ELIMINAR:
+                return _ejecutarEliminacion(solicitud);
+            case ACTUALIZAR: // <-- AÑADE ESTE CASO
+                return _ejecutarRenombrado(solicitud);
+            default:
+                return false;
             }
         }
+
 
         private boolean _ejecutarCreacionArchivo(SolicitudIO solicitud) {
             System.out.println("EJECUTANDO: Creación de archivo para Proceso " + solicitud.getIdProceso());
@@ -376,12 +400,48 @@ public class SistemaManager {
 
         return false; // No debería llegar aquí a menos que sea la raíz.
     }
-
-        
-        
-
     
     
+    
+    /**
+    * Realiza el renombrado real de un archivo o directorio.
+    * @param solicitud La solicitud de E/S de tipo ACTUALIZAR.
+    * @return true si la operación fue exitosa.
+    */
+    private boolean _ejecutarRenombrado(SolicitudIO solicitud) {
+        System.out.println("EJECUTANDO: Renombrado para Proceso " + solicitud.getIdProceso());
+
+        // 1. Encontrar la entrada a renombrar por su ruta original.
+        EntradaSistemaArchivos entrada = buscarEntradaPorRuta(solicitud.getRuta());
+        if (entrada == null) {
+            System.err.println("Error: No se encontró la entrada a renombrar: " + solicitud.getRuta());
+            return false;
+        }
+
+        // 2. Obtener el nuevo nombre desde la solicitud.
+        String nuevoNombre = solicitud.getNuevoNombre();
+        if (nuevoNombre == null || nuevoNombre.trim().isEmpty()) {
+            System.err.println("Error: El nuevo nombre es inválido.");
+            return false;
+        }
+
+        // 3. ¡MUY IMPORTANTE! Verificar que no haya un nombre duplicado en el mismo directorio.
+        Directorio padre = entrada.getPadre();
+        if (padre != null && padre.contieneNombre(nuevoNombre)) {
+            System.err.println("Error: Ya existe una entrada con el nombre '" + nuevoNombre + "' en este directorio.");
+            // Podríamos notificar al usuario aquí si quisiéramos.
+            return false;
+        }
+
+        // 4. Realizar el renombrado.
+        entrada.setNombre(nuevoNombre);
+
+        // 5. Activar la bandera para que el JTree se actualice.
+        this.huboCambioEnEstructura = true;
+
+        return true;
+    }
+
     // --- GESTIÓN DE POLÍTICAS ---
     public void cambiarPoliticaPlanificacion(String nombrePolitica) {
         switch (nombrePolitica.toUpperCase()) {

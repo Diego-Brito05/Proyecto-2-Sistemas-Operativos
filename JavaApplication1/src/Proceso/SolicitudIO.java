@@ -14,13 +14,20 @@ public class SolicitudIO {
     private String ruta;
     private int tamanoEnBloques; // Solo para CREAR
     private int bloqueObjetivo; // Posición del primer bloque para SSTF, SCAN, etc.
+    private final String nuevoNombre; // Usado solo para operaciones de ACTUALIZAR
 
-    public SolicitudIO(int idProceso, TipoOperacionIO tipo, String ruta, int tamanoEnBloques, int bloqueObjetivo) {
+     public SolicitudIO(int idProceso, TipoOperacionIO tipo, String ruta, int tamanoEnBloques, int bloqueObjetivo, String nuevoNombre) {
         this.idProceso = idProceso;
         this.tipo = tipo;
         this.ruta = ruta;
         this.tamanoEnBloques = tamanoEnBloques;
         this.bloqueObjetivo = bloqueObjetivo;
+        this.nuevoNombre = nuevoNombre; // Asignar el nuevo campo
+    }
+     
+       // --- Versión del constructor para operaciones que no necesitan un nuevo nombre ---
+    public SolicitudIO(int idProceso, TipoOperacionIO tipo, String ruta, int tamanoEnBloques, int bloqueObjetivo) {
+        this(idProceso, tipo, ruta, tamanoEnBloques, bloqueObjetivo, null);
     }
 
     // Getters
@@ -29,4 +36,5 @@ public class SolicitudIO {
     public String getRuta() { return ruta; }
     public int getTamanoEnBloques() { return tamanoEnBloques; }
     public int getBloqueObjetivo() { return bloqueObjetivo; }
+    public String getNuevoNombre() {return nuevoNombre;}
 }
