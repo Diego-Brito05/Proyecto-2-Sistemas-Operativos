@@ -414,7 +414,8 @@ public class VentanaPrincipal extends javax.swing.JFrame {
     * Con el modelo de 3 estados, el motor es muy simple.
     */
     private void inicializarMotorSimulador() {
-        int velocidadSimulacionMS = 1500; // 1.5 segundos por "tick"
+        
+        int velocidadSimulacionMS = 500; // 0,5 segundos por "tick"
 
         // El ActionListener que se ejecutará en cada "tick" del timer.
         ActionListener tickListener = new ActionListener() {
@@ -527,11 +528,16 @@ public class VentanaPrincipal extends javax.swing.JFrame {
         jTree1 = new javax.swing.JTree();
         VisualizadorDisco = new javax.swing.JPanel();
         jPanel3 = new javax.swing.JPanel();
+        jPanel13 = new javax.swing.JPanel();
+        jLabel85 = new javax.swing.JLabel();
+        BuscarConfig4 = new javax.swing.JButton();
+        CrearConfig4 = new javax.swing.JButton();
+        jLabel86 = new javax.swing.JLabel();
+        jLabel87 = new javax.swing.JLabel();
         Simulador = new javax.swing.JPanel();
         jScrollPane17 = new javax.swing.JScrollPane();
         ListaEjecutando = new javax.swing.JList<>();
         jLabel27 = new javax.swing.JLabel();
-        IndicadorActivo = new javax.swing.JToggleButton();
         jScrollPane18 = new javax.swing.JScrollPane();
         ListaTerminado = new javax.swing.JList<>();
         jLabel31 = new javax.swing.JLabel();
@@ -542,6 +548,11 @@ public class VentanaPrincipal extends javax.swing.JFrame {
         jLabel43 = new javax.swing.JLabel();
         modoAct = new javax.swing.JTextArea();
         modoToggleButton = new javax.swing.JToggleButton();
+        jLabel1 = new javax.swing.JLabel();
+        jPanel1 = new javax.swing.JPanel();
+        jLabel44 = new javax.swing.JLabel();
+        PoliticaPlanificacion = new javax.swing.JComboBox<>();
+        CambiarPolitica = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -573,15 +584,84 @@ public class VentanaPrincipal extends javax.swing.JFrame {
 
         Configuracion.addTab("Tabla de asignacion de archivos", VisualizadorDisco);
 
+        jPanel3.setBackground(new java.awt.Color(204, 204, 255));
+
+        jPanel13.setBackground(new java.awt.Color(153, 153, 255));
+        jPanel13.setForeground(new java.awt.Color(255, 255, 255));
+
+        BuscarConfig4.setText("Buscar Configuración");
+        BuscarConfig4.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                BuscarConfig4ActionPerformed(evt);
+            }
+        });
+
+        CrearConfig4.setText("Guardar Configuración");
+        CrearConfig4.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                CrearConfig4ActionPerformed(evt);
+            }
+        });
+
+        jLabel86.setFont(new java.awt.Font("Segoe UI", 1, 24)); // NOI18N
+        jLabel86.setText("Configuracion Con archivo JSON");
+
+        jLabel87.setText("Guarda o carga la Configuracion del sitema de archivos");
+
+        javax.swing.GroupLayout jPanel13Layout = new javax.swing.GroupLayout(jPanel13);
+        jPanel13.setLayout(jPanel13Layout);
+        jPanel13Layout.setHorizontalGroup(
+            jPanel13Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel13Layout.createSequentialGroup()
+                .addGroup(jPanel13Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanel13Layout.createSequentialGroup()
+                        .addGap(162, 162, 162)
+                        .addComponent(jLabel85))
+                    .addGroup(jPanel13Layout.createSequentialGroup()
+                        .addGap(55, 55, 55)
+                        .addGroup(jPanel13Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabel86)
+                            .addGroup(jPanel13Layout.createSequentialGroup()
+                                .addComponent(BuscarConfig4)
+                                .addGap(66, 66, 66)
+                                .addComponent(CrearConfig4)))))
+                .addContainerGap(37, Short.MAX_VALUE))
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel13Layout.createSequentialGroup()
+                .addGap(0, 0, Short.MAX_VALUE)
+                .addComponent(jLabel87)
+                .addGap(78, 78, 78))
+        );
+        jPanel13Layout.setVerticalGroup(
+            jPanel13Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel13Layout.createSequentialGroup()
+                .addGap(54, 54, 54)
+                .addComponent(jLabel86)
+                .addGap(26, 26, 26)
+                .addComponent(jLabel87)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jLabel85)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGroup(jPanel13Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(BuscarConfig4)
+                    .addComponent(CrearConfig4))
+                .addGap(49, 49, 49))
+        );
+
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 1593, Short.MAX_VALUE)
+            .addGroup(jPanel3Layout.createSequentialGroup()
+                .addGap(18, 18, 18)
+                .addComponent(jPanel13, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(1109, Short.MAX_VALUE))
         );
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 786, Short.MAX_VALUE)
+            .addGroup(jPanel3Layout.createSequentialGroup()
+                .addGap(29, 29, 29)
+                .addComponent(jPanel13, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGap(492, 492, 492))
         );
 
         Configuracion.addTab("Configuracion", jPanel3);
@@ -593,13 +673,6 @@ public class VentanaPrincipal extends javax.swing.JFrame {
         jLabel27.setFont(new java.awt.Font("Segoe UI", 3, 14)); // NOI18N
         jLabel27.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jLabel27.setText("Terminado");
-
-        IndicadorActivo.setBackground(new java.awt.Color(51, 255, 0));
-        IndicadorActivo.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                IndicadorActivoActionPerformed(evt);
-            }
-        });
 
         jScrollPane18.setViewportView(ListaTerminado);
 
@@ -629,58 +702,110 @@ public class VentanaPrincipal extends javax.swing.JFrame {
             }
         });
 
+        jLabel1.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
+        jLabel1.setText("Visualizador de Bloques");
+
+        jPanel1.setBackground(new java.awt.Color(204, 204, 255));
+
+        jLabel44.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        jLabel44.setText("Cambiar Política de Planificación");
+
+        PoliticaPlanificacion.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "FIFO", "SSTF", "SCAN", "C-SCAN" }));
+        PoliticaPlanificacion.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                PoliticaPlanificacionActionPerformed(evt);
+            }
+        });
+
+        CambiarPolitica.setText("Guardar Cambios");
+        CambiarPolitica.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                CambiarPoliticaActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
+        jPanel1.setLayout(jPanel1Layout);
+        jPanel1Layout.setHorizontalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addGap(53, 53, 53)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(jLabel44, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(PoliticaPlanificacion, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(CambiarPolitica, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap(55, Short.MAX_VALUE))
+        );
+        jPanel1Layout.setVerticalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jLabel44)
+                .addGap(18, 18, 18)
+                .addComponent(PoliticaPlanificacion, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(18, 18, 18)
+                .addComponent(CambiarPolitica)
+                .addContainerGap(34, Short.MAX_VALUE))
+        );
+
         javax.swing.GroupLayout SimuladorLayout = new javax.swing.GroupLayout(Simulador);
         Simulador.setLayout(SimuladorLayout);
         SimuladorLayout.setHorizontalGroup(
             SimuladorLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(SimuladorLayout.createSequentialGroup()
-                .addGroup(SimuladorLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGap(110, 110, 110)
+                .addGroup(SimuladorLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addGroup(SimuladorLayout.createSequentialGroup()
-                        .addGap(19, 19, 19)
-                        .addComponent(IndicadorActivo)
-                        .addGap(37, 37, 37)
-                        .addGroup(SimuladorLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addGroup(SimuladorLayout.createSequentialGroup()
-                                .addComponent(jScrollPane24, javax.swing.GroupLayout.PREFERRED_SIZE, 116, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(18, 18, 18)
-                                .addComponent(jScrollPane17, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(18, 18, 18)
-                                .addComponent(jScrollPane18, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addGroup(SimuladorLayout.createSequentialGroup()
-                                .addComponent(jLabel33, javax.swing.GroupLayout.PREFERRED_SIZE, 70, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(modoAct, javax.swing.GroupLayout.PREFERRED_SIZE, 146, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addComponent(modoToggleButton))))
-                    .addGroup(SimuladorLayout.createSequentialGroup()
-                        .addGap(110, 110, 110)
                         .addComponent(jLabel43, javax.swing.GroupLayout.PREFERRED_SIZE, 73, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGroup(SimuladorLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(SimuladorLayout.createSequentialGroup()
-                                .addGap(490, 490, 490)
-                                .addComponent(jLabel34, javax.swing.GroupLayout.PREFERRED_SIZE, 98, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addGroup(SimuladorLayout.createSequentialGroup()
-                                .addGap(61, 61, 61)
-                                .addComponent(jLabel31, javax.swing.GroupLayout.PREFERRED_SIZE, 73, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(67, 67, 67)
-                                .addComponent(jLabel27, javax.swing.GroupLayout.PREFERRED_SIZE, 75, javax.swing.GroupLayout.PREFERRED_SIZE)))))
+                        .addGap(61, 61, 61)
+                        .addComponent(jLabel31, javax.swing.GroupLayout.PREFERRED_SIZE, 73, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(67, 67, 67)
+                        .addComponent(jLabel27, javax.swing.GroupLayout.PREFERRED_SIZE, 75, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(214, 214, 214)
+                .addComponent(jLabel34, javax.swing.GroupLayout.PREFERRED_SIZE, 98, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap(822, Short.MAX_VALUE))
+            .addGroup(SimuladorLayout.createSequentialGroup()
+                .addGap(86, 86, 86)
+                .addGroup(SimuladorLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addGroup(SimuladorLayout.createSequentialGroup()
+                        .addComponent(jScrollPane24, javax.swing.GroupLayout.PREFERRED_SIZE, 116, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(18, 18, 18)
+                        .addComponent(jScrollPane17, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(18, 18, 18)
+                        .addComponent(jScrollPane18, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(SimuladorLayout.createSequentialGroup()
+                        .addComponent(jLabel33, javax.swing.GroupLayout.PREFERRED_SIZE, 70, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(modoAct, javax.swing.GroupLayout.PREFERRED_SIZE, 146, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(modoToggleButton)))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, SimuladorLayout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jLabel1)
+                .addGap(359, 359, 359))
         );
         SimuladorLayout.setVerticalGroup(
             SimuladorLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(SimuladorLayout.createSequentialGroup()
-                .addGap(26, 26, 26)
-                .addComponent(IndicadorActivo, javax.swing.GroupLayout.PREFERRED_SIZE, 31, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(88, 88, 88)
-                .addComponent(jLabel34)
-                .addGap(18, 18, 18)
+                .addGroup(SimuladorLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(SimuladorLayout.createSequentialGroup()
+                        .addGap(55, 55, 55)
+                        .addComponent(jLabel1)
+                        .addGap(65, 65, 65)
+                        .addComponent(jLabel34)
+                        .addGap(18, 18, 18))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, SimuladorLayout.createSequentialGroup()
+                        .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(5, 5, 5)))
                 .addGroup(SimuladorLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel31)
                     .addComponent(jLabel43)
                     .addComponent(jLabel27))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(SimuladorLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane18)
+                    .addComponent(jScrollPane18, javax.swing.GroupLayout.DEFAULT_SIZE, 557, Short.MAX_VALUE)
                     .addGroup(SimuladorLayout.createSequentialGroup()
                         .addGroup(SimuladorLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
                             .addComponent(jScrollPane17, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 557, Short.MAX_VALUE)
@@ -713,10 +838,6 @@ public class VentanaPrincipal extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void IndicadorActivoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_IndicadorActivoActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_IndicadorActivoActionPerformed
-
     private void modoToggleButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_modoToggleButtonActionPerformed
         // El JToggleButton tiene un estado "seleccionado"
     if (modoToggleButton.isSelected()) {
@@ -730,6 +851,22 @@ public class VentanaPrincipal extends javax.swing.JFrame {
     // Actualizamos la UI para que refleje el cambio
     actualizarUIModo();
     }//GEN-LAST:event_modoToggleButtonActionPerformed
+
+    private void CambiarPoliticaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_CambiarPoliticaActionPerformed
+
+    }//GEN-LAST:event_CambiarPoliticaActionPerformed
+
+    private void PoliticaPlanificacionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_PoliticaPlanificacionActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_PoliticaPlanificacionActionPerformed
+
+    private void BuscarConfig4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BuscarConfig4ActionPerformed
+
+    }//GEN-LAST:event_BuscarConfig4ActionPerformed
+
+    private void CrearConfig4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_CrearConfig4ActionPerformed
+
+    }//GEN-LAST:event_CrearConfig4ActionPerformed
 
     /**
      * @param args the command line arguments
@@ -758,19 +895,53 @@ public class VentanaPrincipal extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel Arbol;
+    private javax.swing.JButton BuscarConfig;
+    private javax.swing.JButton BuscarConfig1;
+    private javax.swing.JButton BuscarConfig2;
+    private javax.swing.JButton BuscarConfig3;
+    private javax.swing.JButton BuscarConfig4;
+    private javax.swing.JButton CambiarPolitica;
     private javax.swing.JTabbedPane Configuracion;
-    private javax.swing.JToggleButton IndicadorActivo;
+    private javax.swing.JButton CrearConfig;
+    private javax.swing.JButton CrearConfig1;
+    private javax.swing.JButton CrearConfig2;
+    private javax.swing.JButton CrearConfig3;
+    private javax.swing.JButton CrearConfig4;
     private javax.swing.JList<Proceso> ListaBloqueado;
     private javax.swing.JList<Proceso> ListaEjecutando;
     private javax.swing.JList<Proceso> ListaTerminado;
+    private javax.swing.JComboBox<String> PoliticaPlanificacion;
     private javax.swing.JPanel Simulador;
     private javax.swing.JPanel VisualizadorDisco;
+    private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel27;
     private javax.swing.JLabel jLabel31;
     private javax.swing.JLabel jLabel33;
     private javax.swing.JLabel jLabel34;
     private javax.swing.JLabel jLabel43;
+    private javax.swing.JLabel jLabel44;
+    private javax.swing.JLabel jLabel73;
+    private javax.swing.JLabel jLabel74;
+    private javax.swing.JLabel jLabel75;
+    private javax.swing.JLabel jLabel76;
+    private javax.swing.JLabel jLabel77;
+    private javax.swing.JLabel jLabel78;
+    private javax.swing.JLabel jLabel79;
+    private javax.swing.JLabel jLabel80;
+    private javax.swing.JLabel jLabel81;
+    private javax.swing.JLabel jLabel82;
+    private javax.swing.JLabel jLabel83;
+    private javax.swing.JLabel jLabel84;
+    private javax.swing.JLabel jLabel85;
+    private javax.swing.JLabel jLabel86;
+    private javax.swing.JLabel jLabel87;
+    private javax.swing.JPanel jPanel1;
+    private javax.swing.JPanel jPanel10;
+    private javax.swing.JPanel jPanel11;
+    private javax.swing.JPanel jPanel12;
+    private javax.swing.JPanel jPanel13;
     private javax.swing.JPanel jPanel3;
+    private javax.swing.JPanel jPanel9;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane17;
     private javax.swing.JScrollPane jScrollPane18;

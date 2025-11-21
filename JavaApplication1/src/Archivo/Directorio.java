@@ -18,9 +18,8 @@ public class Directorio extends EntradaSistemaArchivos {
         this.contenido = new ListaEnlazada<>();
     }
     
-    // ... otros métodos como agregarEntrada y getContenido ...
 
-    // --- MÉTODO NUEVO Y PREFERIDO ---
+    // --- MÉTODO PREFERIDO ---
     /**
      * Elimina una entrada del contenido de este directorio, dado el objeto exacto a eliminar.
      * Este método es más eficiente porque no necesita buscar por nombre.
@@ -33,7 +32,6 @@ public class Directorio extends EntradaSistemaArchivos {
         return this.getContenido().eliminar(entrada);
     }
 
-    // --- MÉTODO ANTIGUO (OPCIONAL PERO RECOMENDADO MANTENER) ---
     /**
      * Elimina una entrada buscando por su nombre. Es útil si solo se dispone del nombre.
      * @param nombre El nombre del Archivo o Directorio a eliminar.

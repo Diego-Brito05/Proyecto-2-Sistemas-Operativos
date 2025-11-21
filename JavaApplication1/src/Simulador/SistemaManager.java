@@ -30,6 +30,8 @@ public class SistemaManager {
     private Directorio directorioRaiz;
     private Bloque[] disco;
     private static final int TAMANO_DISCO = 200;
+    private int tiempoRestanteEjecucionIO;
+    private static final int TIEMPO_POR_TICK = 500; // Debe coincidir con el Timer de motorSimulador de VentanaPrincipal
     
       // --- NUEVA BANDERA DE ESTADO ---
     private boolean huboCambioEnEstructura = false;
@@ -47,7 +49,7 @@ public class SistemaManager {
         inicializarDisco();
         directorioRaiz = new Directorio("C:", null);
         
-
+        this.tiempoRestanteEjecucionIO = 0;
         this.procesoEnEjecucionIO = null;
         this.colaBloqueados = new Cola<>();
         this.colaTerminados = new Cola<>();
@@ -187,36 +189,67 @@ public class SistemaManager {
     
           
     
+    /**
+    * Gestiona el ciclo de vida de la ejecución de E/S.
+    * Si una operación está en curso, descuenta su tiempo.
+    * Si no hay operación en curso, inicia una nueva desde la cola de bloqueados.
+    */
     public void procesarSiguienteSolicitudIO() {
-                if (procesoEnEjecucionIO != null || colaIO.estaVacia()) {
-                    return; 
-                }
+        // --- CASO 1: Hay una operación en curso ---
+        if (procesoEnEjecucionIO != null) {
+            // Descontamos el tiempo de un "tick"
+            this.tiempoRestanteEjecucionIO -= TIEMPO_POR_TICK;
+            System.out.println("Proceso " + procesoEnEjecucionIO.getId() + " en ejecución. Tiempo restante: " + tiempoRestanteEjecucionIO + "ms");
 
-                SolicitudIO solicitud = planificador.seleccionarSiguiente(colaIO);
-                if (solicitud == null) return;
+            // Verificamos si la operación ha terminado
+            if (this.tiempoRestanteEjecucionIO <= 0) {
+                System.out.println("Proceso " + procesoEnEjecucionIO.getId() + " ha terminado su E/S.");
 
-                Proceso proceso = buscarYRemoverDeCola(colaBloqueados, solicitud.getIdProceso());
+                // Movemos el proceso a la cola de TERMINADOS
+                procesoEnEjecucionIO.setEstado(EstadoProceso.TERMINADO);
+                colaTerminados.encolar(procesoEnEjecucionIO);
 
-                if (proceso != null) {
-                    // --- INICIO DE LA EJECUCIÓN ---
-                    proceso.setEstado(EstadoProceso.EJECUTANDO);
-                    procesoEnEjecucionIO = proceso;
-
-                    // ¡AQUÍ OCURRE LA MAGIA!
-                    // Se llama al método que realmente modifica el sistema de archivos.
-                    boolean exito = ejecutarOperacionReal(solicitud);
-
-                    if (!exito) {
-                        // Manejar el fallo (ej. no hay espacio)
-                        System.out.println("ERROR: La operación para el proceso " + proceso.getId() + " ha fallado.");
-                    }
-
-                    // --- FIN DE LA EJECUCIÓN ---
-                    proceso.setEstado(EstadoProceso.TERMINADO);
-                    colaTerminados.encolar(proceso);
-                    procesoEnEjecucionIO = null; // Liberar el "procesador" de E/S
-                }
+                // Liberamos el "procesador" de E/S
+                procesoEnEjecucionIO = null;
             }
+            return; // Salimos, ya que en este tick solo procesamos la operación activa
+        }
+
+        // --- CASO 2: No hay operación en curso, intentamos iniciar una nueva ---
+        if (colaIO.estaVacia()) {
+            return; // No hay nada que hacer
+        }
+
+        // Seleccionamos la siguiente solicitud según la política
+        SolicitudIO solicitud = planificador.seleccionarSiguiente(colaIO);
+        if (solicitud == null) return;
+
+        // Movemos el proceso de BLOQUEADO a EJECUTANDO
+        Proceso proceso = buscarYRemoverDeCola(colaBloqueados, solicitud.getIdProceso());
+
+        if (proceso != null) {
+            System.out.println("Iniciando E/S para Proceso " + proceso.getId() + " (" + solicitud.getTipo() + ")");
+            proceso.setEstado(EstadoProceso.EJECUTANDO);
+            procesoEnEjecucionIO = proceso;
+
+            // ¡ACCIÓN CLAVE! Establecemos el tiempo que durará esta operación.
+            this.tiempoRestanteEjecucionIO = getDuracionOperacion(solicitud.getTipo());
+
+            // Ejecutamos la lógica de modificación del sistema de archivos AHORA, al inicio.
+            // La simulación de tiempo representa la espera a que el disco "termine".
+            boolean exito = ejecutarOperacionReal(solicitud);
+
+            if (!exito) {
+                // Si la operación falla instantáneamente (ej. nombre duplicado), la terminamos de inmediato.
+                System.out.println("ERROR: La operación para el proceso " + proceso.getId() + " ha fallado.");
+                proceso.setEstado(EstadoProceso.TERMINADO); // O un nuevo estado "FALLIDO"
+                colaTerminados.encolar(proceso);
+                procesoEnEjecucionIO = null;
+                this.tiempoRestanteEjecucionIO = 0;
+            }
+        }
+    }
+    
 
         /**
          * Método "despachador" que llama a la función CRUD correcta basado en la solicitud.
@@ -232,10 +265,30 @@ public class SistemaManager {
                 return _ejecutarCreacionDirectorio(solicitud);
             case ELIMINAR:
                 return _ejecutarEliminacion(solicitud);
-            case ACTUALIZAR: // <-- AÑADE ESTE CASO
+            case ACTUALIZAR: 
                 return _ejecutarRenombrado(solicitud);
             default:
                 return false;
+            }
+        }
+        
+        /**
+        * Devuelve la duración en milisegundos para un tipo de operación de E/S.
+        * @param tipo El tipo de operación.
+        * @return La duración en ms.
+        */
+       private int getDuracionOperacion(TipoOperacionIO tipo) {
+            switch (tipo) {
+                case CREAR_DIRECTORIO:
+                    return 1000;
+                case CREAR:
+                    return 1500;
+                case ACTUALIZAR:
+                    return 2000;
+                case ELIMINAR:
+                    return 2500;
+                default:
+                    return 500; // Un valor por defecto para operaciones no especificadas
             }
         }
 
@@ -264,16 +317,16 @@ public class SistemaManager {
             }
             Directorio padre = (Directorio) entradaPadre;
 
-            // 3. Lógica de asignación de bloques (esto se queda igual)
+            // 3. Lógica de asignación de bloques 
             int primerBloque = solicitud.getBloqueObjetivo();
             // Aquí iría la lógica para marcar los bloques como ocupados
 
-            // 4. Crear el objeto Archivo y añadirlo al modelo de datos (esto ahora funciona)
+            // 4. Crear el objeto Archivo y añadirlo al modelo de datos 
             Archivo nuevoArchivo = new Archivo(nombreArchivo, padre, solicitud.getTamanoEnBloques(), primerBloque, solicitud.getIdProceso(), "green");
             boolean exito = padre.agregarEntrada(nuevoArchivo);
     
             if (exito) {
-                this.huboCambioEnEstructura = true; // <-- ACTIVAR LA BANDERA
+                this.huboCambioEnEstructura = true; // ACTIVAR LA BANDERA
             }
             return exito;
         }
@@ -490,7 +543,7 @@ public class SistemaManager {
         while (!cola.estaVacia()) {
             Proceso p = cola.desencolar();
             if (p.getId() == idProceso) {
-                encontrado = p; // ¡Lo encontramos! No lo volvemos a encolar.
+                encontrado = p; // Lo encontramos, No lo volvemos a encolar.
             } else {
                 colaAuxiliar.encolar(p); // No es, lo guardamos en la cola auxiliar.
             }

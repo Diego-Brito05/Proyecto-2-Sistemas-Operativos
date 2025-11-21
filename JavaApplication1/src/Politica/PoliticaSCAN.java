@@ -26,19 +26,9 @@ public class PoliticaSCAN implements PoliticaPlanificacion {
         //    y luego elegir la más cercana en la nueva dirección.
         // 4. Volver a encolar el resto.
         
-        // Esta implementación es compleja, aquí un pseudocódigo simplificado:
-        // encontrar_solicitudes_en_direccion();
-        // if (hay_solicitudes_en_direccion) {
-        //   return mas_cercana_de_esa_lista;
-        // } else {
-        //   planificador.invertirDireccion();
-        //   encontrar_solicitudes_en_nueva_direccion();
-        //   return mas_cercana_de_esa_lista;
-        // }
+       
         
-        // Por simplicidad, y para que puedas avanzar, usaremos una lógica más básica por ahora.
-        // Una implementación completa requiere más código para manejar la lista temporal.
-        // Esta es solo una aproximación.
+        // Por simplicidad, y para poder avanzar, usaremos una lógica más básica por ahora
         System.out.println("Política SCAN no implementada completamente. Usando FIFO como fallback.");
         return colaIO.desencolar(); 
     }
