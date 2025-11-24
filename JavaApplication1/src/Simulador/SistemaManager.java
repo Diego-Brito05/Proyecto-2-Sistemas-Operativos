@@ -9,6 +9,7 @@ import Archivo.Bloque;
 import Archivo.Directorio;
 import Archivo.EntradaSistemaArchivos;
 import EstructuraDeDatos.Cola;
+import Politica.DireccionScan;
 import Politica.PoliticaCSCAN;
 import Politica.PoliticaFIFO;
 import Politica.PoliticaSCAN;

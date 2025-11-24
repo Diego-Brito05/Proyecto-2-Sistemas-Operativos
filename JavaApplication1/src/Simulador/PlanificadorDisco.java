@@ -73,6 +73,18 @@ public class PlanificadorDisco {
         return seleccionada;
     }
     
+    public void setDireccion(DireccionScan direccion) {
+        this.direccionActual = direccion;
+    }
+    
+    public DireccionScan getDireccion() {
+        return this.direccionActual;
+    }
+    
+    public void setCabezal(int posicion) {
+        this.cabezalActual = posicion;
+    }
+    
     // Getters para que la UI pueda mostrar el estado
     public int getCabezalActual() { return cabezalActual; }
     public String getPoliticaActual() { return this.politicaActual.getClass().getSimpleName(); }

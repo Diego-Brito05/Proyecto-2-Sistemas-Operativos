@@ -89,4 +89,35 @@ public class ListaEnlazada<T> {
 
      return false; // No se encontró el dato en la lista
     }
+    
+    public void agregar(int indice, Nodo nuevo) {
+        if (indice == 0) {
+            if (cabeza != null) {
+                Nodo temp = cabeza.getSiguiente();
+                cabeza.setSiguiente(nuevo.getSiguiente());
+                nuevo.setSiguiente(temp);
+            }
+            nuevo.setSiguiente(cabeza);
+            cabeza = nuevo;
+            return;
+        }
+        
+        Nodo actual = cabeza;
+        int count = 0;
+        
+        //Continua hasta la posición deseada
+        while (actual != null && count < indice-1) {
+            actual = actual.getSiguiente();
+            count++;
+        }
+        
+        if (actual != null && actual.getSiguiente() != null) {
+            //El indice no está fuera de alcance de la lista
+            Nodo nodoIndex = actual.getSiguiente();
+            actual.setSiguiente(nuevo);
+            Nodo temp = nuevo.getSiguiente();
+            nuevo.setSiguiente(nodoIndex.getSiguiente());
+            nodoIndex.setSiguiente(temp);
+        }
+    }
 }
