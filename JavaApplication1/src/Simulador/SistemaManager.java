@@ -12,6 +12,7 @@ import EstructuraDeDatos.Cola;
 import Politica.DireccionScan;
 import Politica.PoliticaCSCAN;
 import Politica.PoliticaFIFO;
+import Politica.PoliticaPlanificacion;
 import Politica.PoliticaSCAN;
 import Politica.PoliticaSSTF;
 import Proceso.EstadoProceso;
@@ -34,7 +35,7 @@ public class SistemaManager {
     private int tiempoRestanteEjecucionIO;
     private static final int TIEMPO_POR_TICK = 500; // Debe coincidir con el Timer de motorSimulador de VentanaPrincipal
     
-      // --- NUEVA BANDERA DE ESTADO ---
+      // --- BANDERA DE ESTADO ---
     private boolean huboCambioEnEstructura = false;
     
     // Colas de estados de proceso
@@ -73,6 +74,20 @@ public class SistemaManager {
             this.disco[i] = new Bloque(i); 
         }
         System.out.println("Disco de " + TAMANO_DISCO + " bloques inicializado.");
+    }
+    
+    public void cambiarPolitica(String Spolitica) {
+        PoliticaPlanificacion politica = null;
+        if ("C-SCAN".equals(Spolitica)) {
+            politica = new PoliticaCSCAN(this.planificador);
+        } else if ("SCAN".equals(Spolitica)) {
+            politica = new PoliticaSCAN(this.planificador);
+        } else if ("SSTF".equals(Spolitica)) {
+            politica = new PoliticaSSTF();
+        } else {
+            politica = new PoliticaFIFO();
+        }
+        this.planificador.setPolitica(politica);
     }
 
     // --- MÉTODOS DE SOLICITUD (LLAMADOS DESDE LA UI) ---

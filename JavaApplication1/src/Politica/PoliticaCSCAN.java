@@ -14,15 +14,19 @@ import Proceso.SolicitudIO;
  *
  * @author Diego
  */
-public class PoliticaCSCAN {
+public class PoliticaCSCAN implements PoliticaPlanificacion {
     // Necesitamos una referencia al planificador para cambiar su dirección
     private PlanificadorDisco planificador; 
-    public PoliticaCSCAN(PlanificadorDisco p) { this.planificador = p; }
+    public PoliticaCSCAN(PlanificadorDisco p) {
+        this.planificador = p; 
+    }
+    
     
     public SolicitudIO seleccionarSiguiente(Cola<SolicitudIO> colaIO, int cabezalActual, DireccionScan direccionActual) {
         // ... POLITICA C-SCAN ...
         // l igual que en SCAN se separa la cola en dos. Una de Solicitudes en bloques mayores y otras en bloques menores
-        // La diferencia es que
+        // La diferencia es que siempre se utiliza la lista de bloques mayores al del cabezal
+        // Si la lista de mayores es null entonces el cabezal vuelve a 0 y la lista de menores ahora es la de mayores.
         
         if (colaIO.estaVacia()) return null;
         
