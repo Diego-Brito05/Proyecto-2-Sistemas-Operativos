@@ -853,13 +853,12 @@ public class VentanaPrincipal extends javax.swing.JFrame {
     }//GEN-LAST:event_modoToggleButtonActionPerformed
 
     private void CambiarPoliticaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_CambiarPoliticaActionPerformed
-
+        String seleccion = (String) PoliticaPlanificacion.getSelectedItem();
+        this.sistemaManager.cambiarPolitica(seleccion);
     }//GEN-LAST:event_CambiarPoliticaActionPerformed
 
     private void PoliticaPlanificacionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_PoliticaPlanificacionActionPerformed
         // TODO add your handling code here:
-        String seleccion = (String) PoliticaPlanificacion.getSelectedItem();
-        this.sistemaManager.cambiarPolitica(seleccion);
     }//GEN-LAST:event_PoliticaPlanificacionActionPerformed
 
     private void BuscarConfig4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BuscarConfig4ActionPerformed

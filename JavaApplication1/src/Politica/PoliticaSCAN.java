@@ -17,7 +17,10 @@ import Simulador.PlanificadorDisco;
 public class PoliticaSCAN implements PoliticaPlanificacion {
     // Necesitamos una referencia al planificador para cambiar su dirección
     private PlanificadorDisco planificador; 
-    public PoliticaSCAN(PlanificadorDisco p) { this.planificador = p; }
+    public PoliticaSCAN(PlanificadorDisco p) {
+        this.planificador = p; 
+    }
+
     
     @Override
     public SolicitudIO seleccionarSiguiente(Cola<SolicitudIO> colaIO, int cabezalActual, DireccionScan direccionActual) {
