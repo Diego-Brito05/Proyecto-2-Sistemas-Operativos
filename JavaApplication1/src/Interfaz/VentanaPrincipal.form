@@ -196,7 +196,7 @@
                 </Component>
                 <Component class="javax.swing.JButton" name="CargarConfig">
                   <Properties>
-                    <Property name="text" type="java.lang.String" value="Buscar Configuraci&#xf3;n"/>
+                    <Property name="text" type="java.lang.String" value="Cargar Configuraci&#xf3;n"/>
                   </Properties>
                   <Events>
                     <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="CargarConfigActionPerformed"/>

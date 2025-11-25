@@ -657,7 +657,7 @@ public class VentanaPrincipal extends javax.swing.JFrame {
         jPanel13.setBackground(new java.awt.Color(153, 153, 255));
         jPanel13.setForeground(new java.awt.Color(255, 255, 255));
 
-        CargarConfig.setText("Buscar Configuración");
+        CargarConfig.setText("Cargar Configuración");
         CargarConfig.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 CargarConfigActionPerformed(evt);
