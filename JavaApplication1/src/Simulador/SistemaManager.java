@@ -111,7 +111,11 @@ public class SistemaManager {
     public void solicitarCreacionArchivo(Directorio padre, String nombre, int tamano) {
         int proximoId = Proceso.peekNextId();
         String rutaCompleta = construirRutaCompleta(padre) + "/" + nombre;
-        SolicitudIO solicitud = new SolicitudIO(proximoId, TipoOperacionIO.CREAR, rutaCompleta, tamano, encontrarPrimerBloqueLibre());
+
+        // El 'bloqueObjetivo' para una creación no es tan relevante para la planificación
+        // como lo es para una lectura o escritura en un archivo existente.
+        // Usamos 0 como un objetivo simbólico.
+        SolicitudIO solicitud = new SolicitudIO(proximoId, TipoOperacionIO.CREAR, rutaCompleta, tamano, 0);
 
         Proceso p = new Proceso("Crear " + nombre, solicitud);
         p.setEstado(EstadoProceso.BLOQUEADO); 
@@ -325,43 +329,101 @@ public class SistemaManager {
             }
         }
 
-
+       /**
+        * Realiza la creación real de un archivo, incluyendo la verificación de espacio
+        * y la asignación encadenada de bloques en el disco.
+        * @param solicitud La solicitud de E/S de tipo CREAR.
+        * @return true si la operación fue exitosa.
+        */
         private boolean _ejecutarCreacionArchivo(SolicitudIO solicitud) {
-            System.out.println("EJECUTANDO: Creación de archivo para Proceso " + solicitud.getIdProceso());
+           System.out.println("EJECUTANDO: Creación de archivo para Proceso " + solicitud.getIdProceso());
+    
+            int tamanoRequerido = solicitud.getTamanoEnBloques();
 
-            // 1. Extraer la ruta del padre y el nombre del nuevo archivo
+            // --- 1. VERIFICACIÓN DE ESPACIO ---
+            if (contarBloquesLibres() < tamanoRequerido) {
+                System.err.println("Error: Espacio insuficiente en disco. Se requieren " + tamanoRequerido + 
+                                   " bloques, pero solo hay " + contarBloquesLibres() + " disponibles.");
+                // Opcional: Podrías notificar al usuario con un JOptionPane aquí,
+                // aunque es más complejo porque esto se ejecuta en el hilo del Timer.
+                return false;
+            }
+
+            // ... (la lógica para encontrar el directorio padre se queda igual) ...
             String rutaCompleta = solicitud.getRuta();
             int ultimoSlash = rutaCompleta.lastIndexOf('/');
-            if (ultimoSlash == -1) return false; // Ruta inválida
-
-            String rutaPadre = rutaCompleta.substring(0, ultimoSlash);
+            String rutaPadre = (ultimoSlash > 0) ? rutaCompleta.substring(0, ultimoSlash) : directorioRaiz.getNombre();
             String nombreArchivo = rutaCompleta.substring(ultimoSlash + 1);
 
-            // Si la ruta del padre es solo "C:", la dejamos así. Si no, y está vacía, es la raíz.
-            if (rutaPadre.isEmpty()) rutaPadre = directorioRaiz.getNombre();
-
-            // 2. Encontrar el directorio padre usando nuestra nueva función
             EntradaSistemaArchivos entradaPadre = buscarEntradaPorRuta(rutaPadre);
-
-            // Validar que el padre exista y sea un directorio
             if (entradaPadre == null || !(entradaPadre instanceof Directorio)) {
-                System.err.println("Error: Directorio padre no encontrado o no es un directorio: " + rutaPadre);
+                System.err.println("Error: Directorio padre no encontrado en la ruta: " + rutaPadre);
                 return false;
             }
             Directorio padre = (Directorio) entradaPadre;
 
-            // 3. Lógica de asignación de bloques 
-            int primerBloque = solicitud.getBloqueObjetivo();
-            // Aquí iría la lógica para marcar los bloques como ocupados
 
-            // 4. Crear el objeto Archivo y añadirlo al modelo de datos 
-            Archivo nuevoArchivo = new Archivo(nombreArchivo, padre, solicitud.getTamanoEnBloques(), primerBloque, solicitud.getIdProceso(), "green");
-            boolean exito = padre.agregarEntrada(nuevoArchivo);
-    
-            if (exito) {
-                this.huboCambioEnEstructura = true; // ACTIVAR LA BANDERA
+            // --- 2. ASIGNACIÓN ENCADENADA DE BLOQUES ---
+            int primerBloqueAsignado = -1;
+            int bloqueAnterior = -1;
+            int bloquesAsignados = 0;
+
+            // Empezamos la búsqueda desde el principio del disco
+            int indiceBusqueda = 0; 
+
+            while (bloquesAsignados < tamanoRequerido) {
+                // Encontrar el siguiente bloque libre disponible
+                int bloqueLibre = encontrarSiguienteBloqueLibre(indiceBusqueda);
+
+                if (bloqueLibre == -1) {
+                     // Esto no debería pasar si la comprobación de espacio inicial fue correcta,
+                     // pero es una salvaguarda.
+                     System.err.println("Error catastrófico: No se encontraron suficientes bloques libres a pesar de la verificación inicial.");
+                     // Aquí deberíamos liberar los bloques que ya asignamos para este archivo (rollback)
+                     // (Por simplicidad, omitimos el rollback por ahora)
+                     return false;
+                }
+
+                // Marcar el bloque como ocupado
+                disco[bloqueLibre].ocupar(solicitud.getIdProceso());
+                System.out.println("Asignando bloque " + bloqueLibre + " al archivo '" + nombreArchivo + "'.");
+
+                if (primerBloqueAsignado == -1) {
+                    // Este es el primer bloque que encontramos para el archivo
+                    primerBloqueAsignado = bloqueLibre;
+                }
+
+                if (bloqueAnterior != -1) {
+                    // Si ya teníamos un bloque asignado, lo encadenamos a este nuevo
+                    disco[bloqueAnterior].setSiguienteBloque(bloqueLibre);
+                }
+
+                // Actualizamos nuestras variables para la siguiente iteración
+                bloqueAnterior = bloqueLibre;
+                bloquesAsignados++;
+                indiceBusqueda = bloqueLibre + 1; // Continuamos la búsqueda desde el siguiente bloque
             }
+
+            // El último bloque de la cadena debe apuntar a FIN_DE_ARCHIVO
+            if (bloqueAnterior != -1) {
+                disco[bloqueAnterior].setSiguienteBloque(Bloque.FIN_DE_ARCHIVO);
+            }
+
+
+            // --- 3. CREACIÓN DEL OBJETO ARCHIVO ---
+            Archivo nuevoArchivo = new Archivo(nombreArchivo, padre, tamanoRequerido, primerBloqueAsignado, solicitud.getIdProceso(), "green");
+
+            // Lo añadimos al directorio.
+            boolean exito = padre.agregarEntrada(nuevoArchivo);
+
+            // --- ¡LÍNEA FALTANTE! ---
+            if (exito) {
+                // Si el archivo se agregó correctamente al directorio, activamos la bandera.
+                this.huboCambioEnEstructura = true;
+            }
+
             return exito;
+
         }
         
         /**
@@ -548,17 +610,32 @@ public class SistemaManager {
 
     // --- Métodos de utilidad ---
     /**
-    * Busca el primer bloque libre en el disco.
-    * @return El índice del primer bloque libre, o -1 si el disco está lleno.
+    * Cuenta el número total de bloques libres en el disco.
+    * @return El número de bloques disponibles.
     */
-    private int encontrarPrimerBloqueLibre() {
+    private int contarBloquesLibres() {
+        int contador = 0;
         for (int i = 0; i < TAMANO_DISCO; i++) {
-            // Asumiendo que tu clase Bloque tiene un método isOcupado()
+            if (disco[i] != null && !disco[i].isOcupado()) {
+                contador++;
+            }
+        }
+        return contador;
+    }
+
+   /**
+    * Encuentra el índice del siguiente bloque libre, comenzando la búsqueda desde
+    * una posición específica.
+    * @param inicio El índice desde el cual empezar a buscar.
+    * @return El índice del siguiente bloque libre, o -1 si no se encuentra ninguno.
+    */
+    private int encontrarSiguienteBloqueLibre(int inicio) {
+        for (int i = inicio; i < TAMANO_DISCO; i++) {
             if (disco[i] != null && !disco[i].isOcupado()) {
                 return i;
             }
         }
-        return -1; // No hay espacio
+        return -1; // No se encontraron más bloques libres
     }
 
     /**
