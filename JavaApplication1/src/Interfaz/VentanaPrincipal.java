@@ -10,6 +10,10 @@ import Archivo.EntradaSistemaArchivos;
 import EstructuraDeDatos.Cola;
 import Proceso.Proceso;
 import Simulador.SistemaManager;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Graphics;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
@@ -46,6 +50,7 @@ public class VentanaPrincipal extends javax.swing.JFrame {
     
     private ModoUsuario modoActual;
     private DefaultMutableTreeNode nodoClickeado; 
+    private PanelDisco panelDisco;
     
     private void inicializarMenuContextual() {
     
@@ -232,13 +237,12 @@ public class VentanaPrincipal extends javax.swing.JFrame {
     
     //  Crear la instancia del gestor del sistema.
     this.sistemaManager = new SistemaManager();
+    this.inicializarPanelDisco();
+    this.panelDisco.setPreferredSize(new Dimension(500, 300));
+    
     
     jTree1.setCellRenderer(new IconTreeCellRenderer());
     
-    
-    //  ¡CRUCIAL! Crear el gestor de listas. Este constructor CREA los modelos
-    //    y los ASIGNA a las JList que ya fueron creadas por initComponents().
-    //    Asegúrate de que los nombres (ListaNuevo, etc.) coincidan con tu diseño.
     this.listManager = new ProcesoListManager(
              
             this.ListaEjecutando, 
@@ -406,8 +410,70 @@ public class VentanaPrincipal extends javax.swing.JFrame {
         DefaultMutableTreeNode rootNode = crearNodosDelArbol(raiz);
         DefaultTreeModel treeModel = new DefaultTreeModel(rootNode);
         jTree1.setModel(treeModel);
+        
+        //Aquí se actualiza el JPanelDisco
+        actualizarBloquesDesdeArbol(jTree1);
     }
      
+    /**
+     * Las siguientes funciones son para crear y refrescar el JPanel de simulador de disco.
+     * 
+     * 
+     */
+    
+    //Funciones para actualizar y crear el JPanelDisco
+    public void inicializarPanelDisco() {
+        // Crear instancia de tu panel personalizado
+        panelDisco = new PanelDisco(200, 20);
+
+        // Reemplazar jPanelDisco por discoPanel
+        // Supongamos que jPanelDisco tiene un padre que es un contenedor (ej. otro JPanel o JFrame)
+        java.awt.Container parent = JPanelDisco.getParent(); 
+
+        // Obtén layout del contenedor  para reañadir correctamente
+        java.awt.LayoutManager layout = parent.getLayout();
+
+        // Remover jPanelDisco
+        parent.remove(JPanelDisco);
+
+        // Añadir nuevo panel personalizado en la misma posición/layout
+        if (layout instanceof java.awt.BorderLayout) {
+            parent.add(panelDisco, BorderLayout.CENTER);  // Si antes estaba en CENTER
+        } else {
+            parent.add(panelDisco);  // Ajusta según layout
+        }
+        
+
+        // Actualiza el layout y refresca UI
+        parent.revalidate(); 
+        parent.repaint();
+    }
+    
+    public void actualizarBloquesDesdeArbol(javax.swing.JTree jTree) {
+        // Primero limpia la ocupación
+        panelDisco.resetBloques();
+
+        DefaultMutableTreeNode root = (DefaultMutableTreeNode) jTree.getModel().getRoot();
+        recorrerNodoYMarcar(root);
+
+        // Finalmente, pide repaint para actualizar visualización
+        panelDisco.repaint();
+    }
+    
+    private void recorrerNodoYMarcar(DefaultMutableTreeNode nodo) {
+    Object obj = nodo.getUserObject();
+    if (obj instanceof Archivo) {
+        Archivo archivo = (Archivo) obj;
+        for (int i = archivo.getPrimerBloque(); i < archivo.getPrimerBloque() + archivo.getTamanoEnBloques(); i++) {
+            panelDisco.setBloqueOcupado(i, true);
+        }
+    }
+
+    // Si es directorio, recorre hijos
+    for (int i = 0; i < nodo.getChildCount(); i++) {
+        recorrerNodoYMarcar((DefaultMutableTreeNode) nodo.getChildAt(i));
+    }
+}
     
     /**
     * Configura y arranca el Timer que actúa como el motor principal de la simulación.
@@ -554,6 +620,7 @@ public class VentanaPrincipal extends javax.swing.JFrame {
         PoliticaPlanificacion = new javax.swing.JComboBox<>();
         CambiarPolitica = new javax.swing.JButton();
         jPanel2 = new javax.swing.JPanel();
+        JPanelDisco = new PanelDisco(200, 20);
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -749,35 +816,33 @@ public class VentanaPrincipal extends javax.swing.JFrame {
                 .addContainerGap(34, Short.MAX_VALUE))
         );
 
-        javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
-        jPanel2.setLayout(jPanel2Layout);
-        jPanel2Layout.setHorizontalGroup(
-            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 871, Short.MAX_VALUE)
-        );
-        jPanel2Layout.setVerticalGroup(
-            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 568, Short.MAX_VALUE)
-        );
+        jPanel2.setBackground(new java.awt.Color(51, 204, 255));
+        jPanel2.setLayout(new java.awt.BorderLayout());
+
+        JPanelDisco.setMaximumSize(new java.awt.Dimension(400, 200));
+        JPanelDisco.setMinimumSize(new java.awt.Dimension(100, 100));
+        JPanelDisco.setLayout(new java.awt.BorderLayout());
+        jPanel2.add(JPanelDisco, java.awt.BorderLayout.CENTER);
 
         javax.swing.GroupLayout SimuladorLayout = new javax.swing.GroupLayout(Simulador);
         Simulador.setLayout(SimuladorLayout);
         SimuladorLayout.setHorizontalGroup(
             SimuladorLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(SimuladorLayout.createSequentialGroup()
-                .addGroup(SimuladorLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGap(110, 110, 110)
+                .addGroup(SimuladorLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addGroup(SimuladorLayout.createSequentialGroup()
-                        .addGap(110, 110, 110)
-                        .addGroup(SimuladorLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addGroup(SimuladorLayout.createSequentialGroup()
-                                .addComponent(jLabel43, javax.swing.GroupLayout.PREFERRED_SIZE, 73, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(61, 61, 61)
-                                .addComponent(jLabel31, javax.swing.GroupLayout.PREFERRED_SIZE, 73, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(67, 67, 67)
-                                .addComponent(jLabel27, javax.swing.GroupLayout.PREFERRED_SIZE, 75, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(76, 76, 76)
-                        .addComponent(jLabel34, javax.swing.GroupLayout.PREFERRED_SIZE, 98, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addComponent(jLabel43, javax.swing.GroupLayout.PREFERRED_SIZE, 73, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(61, 61, 61)
+                        .addComponent(jLabel31, javax.swing.GroupLayout.PREFERRED_SIZE, 73, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(67, 67, 67)
+                        .addComponent(jLabel27, javax.swing.GroupLayout.PREFERRED_SIZE, 75, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jLabel1)
+                .addGap(440, 440, 440))
+            .addGroup(SimuladorLayout.createSequentialGroup()
+                .addGroup(SimuladorLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(SimuladorLayout.createSequentialGroup()
                         .addGap(86, 86, 86)
                         .addGroup(SimuladorLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
@@ -792,37 +857,36 @@ public class VentanaPrincipal extends javax.swing.JFrame {
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(modoAct, javax.swing.GroupLayout.PREFERRED_SIZE, 146, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addComponent(modoToggleButton)))))
-                .addGroup(SimuladorLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                .addComponent(modoToggleButton)))
+                        .addGap(76, 76, 76)
+                        .addComponent(jLabel34, javax.swing.GroupLayout.PREFERRED_SIZE, 98, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(SimuladorLayout.createSequentialGroup()
-                        .addGap(39, 39, 39)
-                        .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addContainerGap(50, Short.MAX_VALUE))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, SimuladorLayout.createSequentialGroup()
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(jLabel1)
-                        .addGap(395, 395, 395))))
+                        .addGap(633, 633, 633)
+                        .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, 840, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addContainerGap(120, Short.MAX_VALUE))
         );
         SimuladorLayout.setVerticalGroup(
             SimuladorLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(SimuladorLayout.createSequentialGroup()
                 .addGroup(SimuladorLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(SimuladorLayout.createSequentialGroup()
-                        .addGroup(SimuladorLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(SimuladorLayout.createSequentialGroup()
-                                .addGap(145, 145, 145)
-                                .addComponent(jLabel34)
-                                .addGap(18, 18, 18))
-                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, SimuladorLayout.createSequentialGroup()
-                                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(5, 5, 5)))
+                        .addGap(64, 64, 64)
+                        .addComponent(jLabel1)
+                        .addGap(56, 56, 56)
+                        .addComponent(jLabel34)
+                        .addGap(18, 18, 18))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, SimuladorLayout.createSequentialGroup()
+                        .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(5, 5, 5)))
+                .addGroup(SimuladorLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(SimuladorLayout.createSequentialGroup()
                         .addGroup(SimuladorLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jLabel31)
                             .addComponent(jLabel43)
                             .addComponent(jLabel27))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(SimuladorLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jScrollPane18)
+                            .addComponent(jScrollPane18, javax.swing.GroupLayout.DEFAULT_SIZE, 557, Short.MAX_VALUE)
                             .addGroup(SimuladorLayout.createSequentialGroup()
                                 .addGroup(SimuladorLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
                                     .addComponent(jScrollPane17, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 557, Short.MAX_VALUE)
@@ -830,11 +894,8 @@ public class VentanaPrincipal extends javax.swing.JFrame {
                                 .addGap(0, 0, Short.MAX_VALUE)))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED))
                     .addGroup(SimuladorLayout.createSequentialGroup()
-                        .addGap(63, 63, 63)
-                        .addComponent(jLabel1)
-                        .addGap(46, 46, 46)
-                        .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 50, Short.MAX_VALUE)))
+                        .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, 420, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 169, Short.MAX_VALUE)))
                 .addGroup(SimuladorLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, SimuladorLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                         .addComponent(modoAct, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -923,6 +984,7 @@ public class VentanaPrincipal extends javax.swing.JFrame {
     private javax.swing.JButton CambiarPolitica;
     private javax.swing.JTabbedPane Configuracion;
     private javax.swing.JButton CrearConfig4;
+    private javax.swing.JPanel JPanelDisco;
     private javax.swing.JList<Proceso> ListaBloqueado;
     private javax.swing.JList<Proceso> ListaEjecutando;
     private javax.swing.JList<Proceso> ListaTerminado;
