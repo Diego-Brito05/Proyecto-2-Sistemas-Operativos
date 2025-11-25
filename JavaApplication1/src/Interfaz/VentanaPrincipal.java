@@ -19,12 +19,14 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import javax.swing.DefaultListModel;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.JSeparator;
 import javax.swing.Timer;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
@@ -946,7 +948,42 @@ public class VentanaPrincipal extends javax.swing.JFrame {
     }//GEN-LAST:event_PoliticaPlanificacionActionPerformed
 
     private void CargarConfigActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_CargarConfigActionPerformed
+                                         
+        JFileChooser fileChooser = new JFileChooser(".");
 
+        // FILTRAR ARCHIVOS: Mostrar solo archivos .json ---
+        // Creamos un filtro que solo acepta directorios y archivos con extensión .json.
+        FileNameExtensionFilter filtroJson = new FileNameExtensionFilter("Archivos JSON (*.json)", "json");
+        fileChooser.setFileFilter(filtroJson);
+
+        // Opcional: Para evitar que el usuario pueda seleccionar "Todos los archivos"
+        // fileChooser.setAcceptAllFileFilterUsed(false);
+
+        // --- 2. Mostrar el diálogo de apertura ---
+        int resultado = fileChooser.showOpenDialog(this);
+
+        if (resultado == JFileChooser.APPROVE_OPTION) {
+            // Obtenemos el archivo seleccionado
+            java.io.File archivoSeleccionado = fileChooser.getSelectedFile();
+            String ruta = archivoSeleccionado.getAbsolutePath();
+
+            //  Asegurarnos de que el archivo termina en .json ---
+            if (!ruta.toLowerCase().endsWith(".json")) {
+                JOptionPane.showMessageDialog(
+                    this, 
+                    "Por favor, seleccione un archivo con la extensión .json.", 
+                    "Archivo Inválido", 
+                    JOptionPane.ERROR_MESSAGE
+                );
+                return; // Detenemos la ejecución si el archivo no es válido.
+            }
+
+            // Si pasamos el filtro y la verificación, procedemos a cargar.
+            sistemaManager.cargarConfiguracion(ruta);
+
+            // Forzamos una actualización inmediata de la UI.
+            actualizarArbol();
+        }
     }//GEN-LAST:event_CargarConfigActionPerformed
 
     private void GuardarConfigActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_GuardarConfigActionPerformed
