@@ -987,7 +987,45 @@ public class VentanaPrincipal extends javax.swing.JFrame {
     }//GEN-LAST:event_CargarConfigActionPerformed
 
     private void GuardarConfigActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_GuardarConfigActionPerformed
+        JFileChooser fileChooser = new JFileChooser(".");
+        FileNameExtensionFilter filtroJson = new FileNameExtensionFilter("Archivos JSON (*.json)", "json");
+        fileChooser.setFileFilter(filtroJson);
 
+        int resultado = fileChooser.showSaveDialog(this);
+
+        if (resultado == JFileChooser.APPROVE_OPTION) {
+            java.io.File archivoSeleccionado = fileChooser.getSelectedFile();
+            String ruta = archivoSeleccionado.getAbsolutePath();
+
+            // Asegurarnos de que la extensión .json esté presente
+            if (!ruta.toLowerCase().endsWith(".json")) {
+                ruta += ".json";
+            }
+
+            // VERIFICACIÓN MANUAL DE SOBRESCRITURA
+            java.io.File archivoFinal = new java.io.File(ruta);
+
+            //  Comprobar si el archivo ya existe.
+            if (archivoFinal.exists()) {
+                //  Si existe, mostrar nuestro propio diálogo de confirmación.
+                int confirmacion = JOptionPane.showConfirmDialog(
+                    this,
+                    "El archivo '" + archivoFinal.getName() + "' ya existe.\n¿Desea reemplazarlo?",
+                    "Confirmar Guardado",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.WARNING_MESSAGE
+                );
+
+                //  Si el usuario no presiona "Sí", abortamos la operación.
+                if (confirmacion != JOptionPane.YES_OPTION) {
+                    System.out.println("Guardado cancelado por el usuario para evitar sobrescritura.");
+                    return; // Salimos del método sin guardar.
+                }
+            }
+
+            //  Si el archivo no existía o si el usuario confirmó la sobrescritura, procedemos a guardar.
+            sistemaManager.guardarConfiguracion(ruta);
+        }
     }//GEN-LAST:event_GuardarConfigActionPerformed
 
     /**
