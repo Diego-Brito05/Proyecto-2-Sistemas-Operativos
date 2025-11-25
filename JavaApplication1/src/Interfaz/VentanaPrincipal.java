@@ -596,8 +596,8 @@ public class VentanaPrincipal extends javax.swing.JFrame {
         jPanel3 = new javax.swing.JPanel();
         jPanel13 = new javax.swing.JPanel();
         jLabel85 = new javax.swing.JLabel();
-        BuscarConfig4 = new javax.swing.JButton();
-        CrearConfig4 = new javax.swing.JButton();
+        CargarConfig = new javax.swing.JButton();
+        GuardarConfig = new javax.swing.JButton();
         jLabel86 = new javax.swing.JLabel();
         jLabel87 = new javax.swing.JLabel();
         Simulador = new javax.swing.JPanel();
@@ -657,17 +657,17 @@ public class VentanaPrincipal extends javax.swing.JFrame {
         jPanel13.setBackground(new java.awt.Color(153, 153, 255));
         jPanel13.setForeground(new java.awt.Color(255, 255, 255));
 
-        BuscarConfig4.setText("Buscar Configuración");
-        BuscarConfig4.addActionListener(new java.awt.event.ActionListener() {
+        CargarConfig.setText("Buscar Configuración");
+        CargarConfig.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                BuscarConfig4ActionPerformed(evt);
+                CargarConfigActionPerformed(evt);
             }
         });
 
-        CrearConfig4.setText("Guardar Configuración");
-        CrearConfig4.addActionListener(new java.awt.event.ActionListener() {
+        GuardarConfig.setText("Guardar Configuración");
+        GuardarConfig.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                CrearConfig4ActionPerformed(evt);
+                GuardarConfigActionPerformed(evt);
             }
         });
 
@@ -690,9 +690,9 @@ public class VentanaPrincipal extends javax.swing.JFrame {
                         .addGroup(jPanel13Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jLabel86)
                             .addGroup(jPanel13Layout.createSequentialGroup()
-                                .addComponent(BuscarConfig4)
+                                .addComponent(CargarConfig)
                                 .addGap(66, 66, 66)
-                                .addComponent(CrearConfig4)))))
+                                .addComponent(GuardarConfig)))))
                 .addContainerGap(37, Short.MAX_VALUE))
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel13Layout.createSequentialGroup()
                 .addGap(0, 0, Short.MAX_VALUE)
@@ -710,8 +710,8 @@ public class VentanaPrincipal extends javax.swing.JFrame {
                 .addComponent(jLabel85)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addGroup(jPanel13Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(BuscarConfig4)
-                    .addComponent(CrearConfig4))
+                    .addComponent(CargarConfig)
+                    .addComponent(GuardarConfig))
                 .addGap(49, 49, 49))
         );
 
@@ -891,11 +891,11 @@ public class VentanaPrincipal extends javax.swing.JFrame {
                                 .addGroup(SimuladorLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
                                     .addComponent(jScrollPane17, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 557, Short.MAX_VALUE)
                                     .addComponent(jScrollPane24, javax.swing.GroupLayout.Alignment.LEADING))
-                                .addGap(0, 0, Short.MAX_VALUE)))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED))
+                                .addGap(0, 0, Short.MAX_VALUE))))
                     .addGroup(SimuladorLayout.createSequentialGroup()
                         .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, 420, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 169, Short.MAX_VALUE)))
+                        .addGap(0, 163, Short.MAX_VALUE)))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(SimuladorLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, SimuladorLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                         .addComponent(modoAct, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -945,13 +945,13 @@ public class VentanaPrincipal extends javax.swing.JFrame {
         // TODO add your handling code here:
     }//GEN-LAST:event_PoliticaPlanificacionActionPerformed
 
-    private void BuscarConfig4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BuscarConfig4ActionPerformed
+    private void CargarConfigActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_CargarConfigActionPerformed
 
-    }//GEN-LAST:event_BuscarConfig4ActionPerformed
+    }//GEN-LAST:event_CargarConfigActionPerformed
 
-    private void CrearConfig4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_CrearConfig4ActionPerformed
+    private void GuardarConfigActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_GuardarConfigActionPerformed
 
-    }//GEN-LAST:event_CrearConfig4ActionPerformed
+    }//GEN-LAST:event_GuardarConfigActionPerformed
 
     /**
      * @param args the command line arguments
@@ -980,10 +980,10 @@ public class VentanaPrincipal extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel Arbol;
-    private javax.swing.JButton BuscarConfig4;
     private javax.swing.JButton CambiarPolitica;
+    private javax.swing.JButton CargarConfig;
     private javax.swing.JTabbedPane Configuracion;
-    private javax.swing.JButton CrearConfig4;
+    private javax.swing.JButton GuardarConfig;
     private javax.swing.JPanel JPanelDisco;
     private javax.swing.JList<Proceso> ListaBloqueado;
     private javax.swing.JList<Proceso> ListaEjecutando;

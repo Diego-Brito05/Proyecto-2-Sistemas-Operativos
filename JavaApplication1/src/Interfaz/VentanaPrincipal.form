@@ -156,9 +156,9 @@
                                   <Group type="103" groupAlignment="0" attributes="0">
                                       <Component id="jLabel86" alignment="0" min="-2" max="-2" attributes="0"/>
                                       <Group type="102" alignment="0" attributes="0">
-                                          <Component id="BuscarConfig4" min="-2" max="-2" attributes="0"/>
+                                          <Component id="CargarConfig" min="-2" max="-2" attributes="0"/>
                                           <EmptySpace min="-2" pref="66" max="-2" attributes="0"/>
-                                          <Component id="CrearConfig4" min="-2" max="-2" attributes="0"/>
+                                          <Component id="GuardarConfig" min="-2" max="-2" attributes="0"/>
                                       </Group>
                                   </Group>
                               </Group>
@@ -183,8 +183,8 @@
                           <Component id="jLabel85" min="-2" max="-2" attributes="0"/>
                           <EmptySpace max="32767" attributes="0"/>
                           <Group type="103" groupAlignment="3" attributes="0">
-                              <Component id="BuscarConfig4" alignment="3" min="-2" max="-2" attributes="0"/>
-                              <Component id="CrearConfig4" alignment="3" min="-2" max="-2" attributes="0"/>
+                              <Component id="CargarConfig" alignment="3" min="-2" max="-2" attributes="0"/>
+                              <Component id="GuardarConfig" alignment="3" min="-2" max="-2" attributes="0"/>
                           </Group>
                           <EmptySpace min="-2" pref="49" max="-2" attributes="0"/>
                       </Group>
@@ -194,20 +194,20 @@
               <SubComponents>
                 <Component class="javax.swing.JLabel" name="jLabel85">
                 </Component>
-                <Component class="javax.swing.JButton" name="BuscarConfig4">
+                <Component class="javax.swing.JButton" name="CargarConfig">
                   <Properties>
                     <Property name="text" type="java.lang.String" value="Buscar Configuraci&#xf3;n"/>
                   </Properties>
                   <Events>
-                    <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="BuscarConfig4ActionPerformed"/>
+                    <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="CargarConfigActionPerformed"/>
                   </Events>
                 </Component>
-                <Component class="javax.swing.JButton" name="CrearConfig4">
+                <Component class="javax.swing.JButton" name="GuardarConfig">
                   <Properties>
                     <Property name="text" type="java.lang.String" value="Guardar Configuraci&#xf3;n"/>
                   </Properties>
                   <Events>
-                    <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="CrearConfig4ActionPerformed"/>
+                    <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="GuardarConfigActionPerformed"/>
                   </Events>
                 </Component>
                 <Component class="javax.swing.JLabel" name="jLabel86">
@@ -326,13 +326,13 @@
                                       <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
                                   </Group>
                               </Group>
-                              <EmptySpace max="-2" attributes="0"/>
                           </Group>
                           <Group type="102" alignment="0" attributes="0">
                               <Component id="jPanel2" min="-2" pref="420" max="-2" attributes="0"/>
-                              <EmptySpace pref="169" max="32767" attributes="0"/>
+                              <EmptySpace min="0" pref="163" max="32767" attributes="0"/>
                           </Group>
                       </Group>
+                      <EmptySpace max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="0" attributes="0">
                           <Group type="103" alignment="1" groupAlignment="3" attributes="0">
                               <Component id="modoAct" alignment="3" min="-2" pref="40" max="-2" attributes="0"/>
