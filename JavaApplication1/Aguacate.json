@@ -1,0 +1,26 @@
+{
+    "tipo": "DIRECTORIO",
+    "contenido": [{
+        "tipo": "DIRECTORIO",
+        "contenido": [
+            {
+                "tipo": "ARCHIVO",
+                "color": "green",
+                "idProcesoCreador": 1,
+                "primerBloque": 0,
+                "tamanoEnBloques": 22,
+                "nombre": "11"
+            },
+            {
+                "tipo": "ARCHIVO",
+                "color": "green",
+                "idProcesoCreador": 2,
+                "primerBloque": 0,
+                "tamanoEnBloques": 22,
+                "nombre": "aguacate"
+            }
+        ],
+        "nombre": "33"
+    }],
+    "nombre": "C:"
+}
