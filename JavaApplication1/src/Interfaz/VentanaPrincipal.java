@@ -15,12 +15,14 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import javax.swing.DefaultListModel;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.JSeparator;
 import javax.swing.Timer;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
@@ -530,8 +532,8 @@ public class VentanaPrincipal extends javax.swing.JFrame {
         jPanel3 = new javax.swing.JPanel();
         jPanel13 = new javax.swing.JPanel();
         jLabel85 = new javax.swing.JLabel();
-        BuscarConfig4 = new javax.swing.JButton();
-        CrearConfig4 = new javax.swing.JButton();
+        CargarConfig = new javax.swing.JButton();
+        GuardarConfig = new javax.swing.JButton();
         jLabel86 = new javax.swing.JLabel();
         jLabel87 = new javax.swing.JLabel();
         Simulador = new javax.swing.JPanel();
@@ -589,17 +591,17 @@ public class VentanaPrincipal extends javax.swing.JFrame {
         jPanel13.setBackground(new java.awt.Color(153, 153, 255));
         jPanel13.setForeground(new java.awt.Color(255, 255, 255));
 
-        BuscarConfig4.setText("Buscar Configuración");
-        BuscarConfig4.addActionListener(new java.awt.event.ActionListener() {
+        CargarConfig.setText("Cargar Configuración");
+        CargarConfig.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                BuscarConfig4ActionPerformed(evt);
+                CargarConfigActionPerformed(evt);
             }
         });
 
-        CrearConfig4.setText("Guardar Configuración");
-        CrearConfig4.addActionListener(new java.awt.event.ActionListener() {
+        GuardarConfig.setText("Guardar Configuración");
+        GuardarConfig.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                CrearConfig4ActionPerformed(evt);
+                GuardarConfigActionPerformed(evt);
             }
         });
 
@@ -622,9 +624,9 @@ public class VentanaPrincipal extends javax.swing.JFrame {
                         .addGroup(jPanel13Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jLabel86)
                             .addGroup(jPanel13Layout.createSequentialGroup()
-                                .addComponent(BuscarConfig4)
+                                .addComponent(CargarConfig)
                                 .addGap(66, 66, 66)
-                                .addComponent(CrearConfig4)))))
+                                .addComponent(GuardarConfig)))))
                 .addContainerGap(37, Short.MAX_VALUE))
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel13Layout.createSequentialGroup()
                 .addGap(0, 0, Short.MAX_VALUE)
@@ -642,8 +644,8 @@ public class VentanaPrincipal extends javax.swing.JFrame {
                 .addComponent(jLabel85)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addGroup(jPanel13Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(BuscarConfig4)
-                    .addComponent(CrearConfig4))
+                    .addComponent(CargarConfig)
+                    .addComponent(GuardarConfig))
                 .addGap(49, 49, 49))
         );
 
@@ -752,39 +754,40 @@ public class VentanaPrincipal extends javax.swing.JFrame {
         Simulador.setLayout(SimuladorLayout);
         SimuladorLayout.setHorizontalGroup(
             SimuladorLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(SimuladorLayout.createSequentialGroup()
-                .addGap(110, 110, 110)
-                .addGroup(SimuladorLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addGroup(SimuladorLayout.createSequentialGroup()
-                        .addComponent(jLabel43, javax.swing.GroupLayout.PREFERRED_SIZE, 73, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(61, 61, 61)
-                        .addComponent(jLabel31, javax.swing.GroupLayout.PREFERRED_SIZE, 73, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(67, 67, 67)
-                        .addComponent(jLabel27, javax.swing.GroupLayout.PREFERRED_SIZE, 75, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(214, 214, 214)
-                .addComponent(jLabel34, javax.swing.GroupLayout.PREFERRED_SIZE, 98, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(822, Short.MAX_VALUE))
-            .addGroup(SimuladorLayout.createSequentialGroup()
-                .addGap(86, 86, 86)
-                .addGroup(SimuladorLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addGroup(SimuladorLayout.createSequentialGroup()
-                        .addComponent(jScrollPane24, javax.swing.GroupLayout.PREFERRED_SIZE, 116, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(18, 18, 18)
-                        .addComponent(jScrollPane17, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(18, 18, 18)
-                        .addComponent(jScrollPane18, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(SimuladorLayout.createSequentialGroup()
-                        .addComponent(jLabel33, javax.swing.GroupLayout.PREFERRED_SIZE, 70, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(modoAct, javax.swing.GroupLayout.PREFERRED_SIZE, 146, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(modoToggleButton)))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, SimuladorLayout.createSequentialGroup()
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(jLabel1)
                 .addGap(359, 359, 359))
+            .addGroup(SimuladorLayout.createSequentialGroup()
+                .addGroup(SimuladorLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(SimuladorLayout.createSequentialGroup()
+                        .addGap(110, 110, 110)
+                        .addGroup(SimuladorLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addGroup(SimuladorLayout.createSequentialGroup()
+                                .addComponent(jLabel43, javax.swing.GroupLayout.PREFERRED_SIZE, 73, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(61, 61, 61)
+                                .addComponent(jLabel31, javax.swing.GroupLayout.PREFERRED_SIZE, 73, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(67, 67, 67)
+                                .addComponent(jLabel27, javax.swing.GroupLayout.PREFERRED_SIZE, 75, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGap(214, 214, 214)
+                        .addComponent(jLabel34, javax.swing.GroupLayout.PREFERRED_SIZE, 98, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(SimuladorLayout.createSequentialGroup()
+                        .addGap(86, 86, 86)
+                        .addGroup(SimuladorLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addGroup(SimuladorLayout.createSequentialGroup()
+                                .addComponent(jScrollPane24, javax.swing.GroupLayout.PREFERRED_SIZE, 116, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(18, 18, 18)
+                                .addComponent(jScrollPane17, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(18, 18, 18)
+                                .addComponent(jScrollPane18, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGroup(SimuladorLayout.createSequentialGroup()
+                                .addComponent(jLabel33, javax.swing.GroupLayout.PREFERRED_SIZE, 70, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(modoAct, javax.swing.GroupLayout.PREFERRED_SIZE, 146, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(modoToggleButton)))))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         SimuladorLayout.setVerticalGroup(
             SimuladorLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -860,13 +863,86 @@ public class VentanaPrincipal extends javax.swing.JFrame {
         // TODO add your handling code here:
     }//GEN-LAST:event_PoliticaPlanificacionActionPerformed
 
-    private void BuscarConfig4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BuscarConfig4ActionPerformed
+    private void CargarConfigActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_CargarConfigActionPerformed
+                                         
+        JFileChooser fileChooser = new JFileChooser(".");
 
-    }//GEN-LAST:event_BuscarConfig4ActionPerformed
+        // FILTRAR ARCHIVOS: Mostrar solo archivos .json ---
+        // Creamos un filtro que solo acepta directorios y archivos con extensión .json.
+        FileNameExtensionFilter filtroJson = new FileNameExtensionFilter("Archivos JSON (*.json)", "json");
+        fileChooser.setFileFilter(filtroJson);
 
-    private void CrearConfig4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_CrearConfig4ActionPerformed
+        // Opcional: Para evitar que el usuario pueda seleccionar "Todos los archivos"
+        // fileChooser.setAcceptAllFileFilterUsed(false);
 
-    }//GEN-LAST:event_CrearConfig4ActionPerformed
+        // --- 2. Mostrar el diálogo de apertura ---
+        int resultado = fileChooser.showOpenDialog(this);
+
+        if (resultado == JFileChooser.APPROVE_OPTION) {
+            // Obtenemos el archivo seleccionado
+            java.io.File archivoSeleccionado = fileChooser.getSelectedFile();
+            String ruta = archivoSeleccionado.getAbsolutePath();
+
+            //  Asegurarnos de que el archivo termina en .json ---
+            if (!ruta.toLowerCase().endsWith(".json")) {
+                JOptionPane.showMessageDialog(
+                    this, 
+                    "Por favor, seleccione un archivo con la extensión .json.", 
+                    "Archivo Inválido", 
+                    JOptionPane.ERROR_MESSAGE
+                );
+                return; // Detenemos la ejecución si el archivo no es válido.
+            }
+
+            // Si pasamos el filtro y la verificación, procedemos a cargar.
+            sistemaManager.cargarConfiguracion(ruta);
+
+            // Forzamos una actualización inmediata de la UI.
+            actualizarArbol();
+        }
+    }//GEN-LAST:event_CargarConfigActionPerformed
+
+    private void GuardarConfigActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_GuardarConfigActionPerformed
+        JFileChooser fileChooser = new JFileChooser(".");
+        FileNameExtensionFilter filtroJson = new FileNameExtensionFilter("Archivos JSON (*.json)", "json");
+        fileChooser.setFileFilter(filtroJson);
+
+        int resultado = fileChooser.showSaveDialog(this);
+
+        if (resultado == JFileChooser.APPROVE_OPTION) {
+            java.io.File archivoSeleccionado = fileChooser.getSelectedFile();
+            String ruta = archivoSeleccionado.getAbsolutePath();
+
+            // Asegurarnos de que la extensión .json esté presente
+            if (!ruta.toLowerCase().endsWith(".json")) {
+                ruta += ".json";
+            }
+
+            // VERIFICACIÓN MANUAL DE SOBRESCRITURA
+            java.io.File archivoFinal = new java.io.File(ruta);
+
+            //  Comprobar si el archivo ya existe.
+            if (archivoFinal.exists()) {
+                //  Si existe, mostrar nuestro propio diálogo de confirmación.
+                int confirmacion = JOptionPane.showConfirmDialog(
+                    this,
+                    "El archivo '" + archivoFinal.getName() + "' ya existe.\n¿Desea reemplazarlo?",
+                    "Confirmar Guardado",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.WARNING_MESSAGE
+                );
+
+                //  Si el usuario no presiona "Sí", abortamos la operación.
+                if (confirmacion != JOptionPane.YES_OPTION) {
+                    System.out.println("Guardado cancelado por el usuario para evitar sobrescritura.");
+                    return; // Salimos del método sin guardar.
+                }
+            }
+
+            //  Si el archivo no existía o si el usuario confirmó la sobrescritura, procedemos a guardar.
+            sistemaManager.guardarConfiguracion(ruta);
+        }
+    }//GEN-LAST:event_GuardarConfigActionPerformed
 
     /**
      * @param args the command line arguments
@@ -895,18 +971,10 @@ public class VentanaPrincipal extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel Arbol;
-    private javax.swing.JButton BuscarConfig;
-    private javax.swing.JButton BuscarConfig1;
-    private javax.swing.JButton BuscarConfig2;
-    private javax.swing.JButton BuscarConfig3;
-    private javax.swing.JButton BuscarConfig4;
     private javax.swing.JButton CambiarPolitica;
+    private javax.swing.JButton CargarConfig;
     private javax.swing.JTabbedPane Configuracion;
-    private javax.swing.JButton CrearConfig;
-    private javax.swing.JButton CrearConfig1;
-    private javax.swing.JButton CrearConfig2;
-    private javax.swing.JButton CrearConfig3;
-    private javax.swing.JButton CrearConfig4;
+    private javax.swing.JButton GuardarConfig;
     private javax.swing.JList<Proceso> ListaBloqueado;
     private javax.swing.JList<Proceso> ListaEjecutando;
     private javax.swing.JList<Proceso> ListaTerminado;
@@ -920,28 +988,12 @@ public class VentanaPrincipal extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel34;
     private javax.swing.JLabel jLabel43;
     private javax.swing.JLabel jLabel44;
-    private javax.swing.JLabel jLabel73;
-    private javax.swing.JLabel jLabel74;
-    private javax.swing.JLabel jLabel75;
-    private javax.swing.JLabel jLabel76;
-    private javax.swing.JLabel jLabel77;
-    private javax.swing.JLabel jLabel78;
-    private javax.swing.JLabel jLabel79;
-    private javax.swing.JLabel jLabel80;
-    private javax.swing.JLabel jLabel81;
-    private javax.swing.JLabel jLabel82;
-    private javax.swing.JLabel jLabel83;
-    private javax.swing.JLabel jLabel84;
     private javax.swing.JLabel jLabel85;
     private javax.swing.JLabel jLabel86;
     private javax.swing.JLabel jLabel87;
     private javax.swing.JPanel jPanel1;
-    private javax.swing.JPanel jPanel10;
-    private javax.swing.JPanel jPanel11;
-    private javax.swing.JPanel jPanel12;
     private javax.swing.JPanel jPanel13;
     private javax.swing.JPanel jPanel3;
-    private javax.swing.JPanel jPanel9;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane17;
     private javax.swing.JScrollPane jScrollPane18;

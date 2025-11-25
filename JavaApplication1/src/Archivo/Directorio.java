@@ -3,7 +3,8 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
 package Archivo;
-
+import org.json.JSONArray; // para pasar el archivo a formato Json
+import org.json.JSONObject; 
 import EstructuraDeDatos.ListaEnlazada;
 
 /**
@@ -92,5 +93,33 @@ public class Directorio extends EntradaSistemaArchivos {
     public ListaEnlazada<EntradaSistemaArchivos> getContenido() {
         return contenido;
     }
+    
+    
+    
+    
+      /**
+     * Convierte este directorio y todo su contenido a un objeto JSON de forma recursiva.
+     * @return Un JSONObject que representa este directorio.
+     */
+    public JSONObject toJson() {
+        JSONObject json = new JSONObject();
+        json.put("nombre", this.getNombre());
+        json.put("tipo", "DIRECTORIO");
+
+        // Convertir cada elemento del contenido a JSON
+        JSONArray contenidoJson = new JSONArray();
+        for (int i = 0; i < this.contenido.getTamano(); i++) {
+            EntradaSistemaArchivos entrada = this.contenido.obtener(i);
+            if (entrada instanceof Directorio) {
+                contenidoJson.put(((Directorio) entrada).toJson());
+            } else if (entrada instanceof Archivo) {
+                contenidoJson.put(((Archivo) entrada).toJson());
+            }
+        }
+        json.put("contenido", contenidoJson);
+        
+        return json;
+    }
+
 }
 

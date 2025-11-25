@@ -22,6 +22,16 @@ import static Proceso.TipoOperacionIO.ACTUALIZAR;
 import static Proceso.TipoOperacionIO.CREAR;
 import static Proceso.TipoOperacionIO.ELIMINAR;
 
+
+//--Imports para guardar y cargar archivos y directorios al Jtree--
+import java.io.FileWriter; 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+
 /**
  *
  * @author Diego
@@ -622,9 +632,111 @@ public class SistemaManager {
         }
         return false; // No hubo cambios
     }
-        
-        
-        
 
+    // --- Funciones de cargado y guardado del Jtree ---
+     
+    /**
+     * Guarda el estado actual del sistema de archivos (la estructura del JTree)
+     * en un archivo JSON.
+     * @param rutaArchivo La ruta donde se guardará el archivo, ej. "configuracion.json".
+     */
+    public void guardarConfiguracion(String rutaArchivo) {
+        if (directorioRaiz == null) {
+            System.err.println("No hay sistema de archivos para guardar.");
+            return;
+        }
+
+        // Convertimos el directorio raíz (y todo su contenido) a JSON.
+        JSONObject jsonRaiz = directorioRaiz.toJson();
+
+        // Escribimos el objeto JSON a un archivo de texto.
+        try (FileWriter file = new FileWriter(rutaArchivo)) {
+            file.write(jsonRaiz.toString(4)); // toString(4) para que el JSON sea legible (indentado)
+            System.out.println("Configuración guardada exitosamente en " + rutaArchivo);
+        } catch (IOException e) {
+            System.err.println("Error al guardar la configuración: " + e.getMessage());
+        }        
+    }
+        
+        
+    /**
+     * Carga un sistema de archivos desde un archivo de configuración JSON,
+     * reemplazando la estructura actual.
+     * @param rutaArchivo La ruta del archivo JSON a cargar.
+     */
+    public void cargarConfiguracion(String rutaArchivo) {
+        try {
+            String contenido = new String(Files.readAllBytes(Paths.get(rutaArchivo)));
+            JSONObject jsonRaiz = new JSONObject(contenido);
+
+            // Reconstruimos la estructura a partir del JSON.
+            EntradaSistemaArchivos nuevaRaiz = reconstruirDesdeJson(jsonRaiz, null);
+
+            
+            // Verificamos que es realmente un Directorio
+            // antes de asignarlo a directorioRaiz.
+            if (nuevaRaiz instanceof Directorio) {
+                // Hacemos el casting explícito para que los tipos coincidan.
+                this.directorioRaiz = (Directorio) nuevaRaiz;
+
+                this.huboCambioEnEstructura = true; // Notificamos que la UI debe actualizarse
+                System.out.println("Configuración cargada exitosamente desde " + rutaArchivo);
+            } else {
+                // Esto solo pasaría si el archivo JSON está mal formado (la raíz es un archivo).
+                System.err.println("Error: El archivo de configuración es inválido. La raíz debe ser un directorio.");
+            }
+
+        } catch (IOException e) {
+            System.err.println("Error al leer el archivo de configuración: " + e.getMessage());
+        } catch (org.json.JSONException e) {
+            System.err.println("Error al parsear el JSON: " + e.getMessage());
+        }
+    }
+    
+     /**
+     * Método auxiliar recursivo que reconstruye la estructura de directorios
+     * a partir de un objeto JSON.
+     * @param jsonObject El JSONObject a procesar (puede ser un archivo o directorio).
+     * @param padre El directorio padre de la entrada que se está creando.
+     * @return La EntradaSistemaArchivos creada (Archivo o Directorio).
+     */
+    private EntradaSistemaArchivos reconstruirDesdeJson(JSONObject jsonObject, Directorio padre) {
+        String tipo = jsonObject.getString("tipo");
+        String nombre = jsonObject.getString("nombre");
+
+        if ("DIRECTORIO".equals(tipo)) {
+            Directorio nuevoDir = new Directorio(nombre, padre);
+            JSONArray contenidoJson = jsonObject.getJSONArray("contenido");
+            
+            for (int i = 0; i < contenidoJson.length(); i++) {
+                JSONObject hijoJson = contenidoJson.getJSONObject(i);
+                // Llamada recursiva para cada hijo, pasando el directorio actual como padre
+                nuevoDir.agregarEntrada(reconstruirDesdeJson(hijoJson, nuevoDir));
+            }
+            return nuevoDir;
+            
+        } else if ("ARCHIVO".equals(tipo)) {
+            int tamano = jsonObject.getInt("tamanoEnBloques");
+            int primerBloque = jsonObject.getInt("primerBloque");
+            int idProceso = jsonObject.getInt("idProcesoCreador");
+            String color = jsonObject.getString("color");
+            
+            // TODO: Al cargar, deberíamos marcar los bloques del disco como ocupados.
+            // Esta lógica es más compleja y se puede añadir después.
+            
+            return new Archivo(nombre, padre, tamano, primerBloque, idProceso, color);
+        }
+        
+        return null; // Tipo desconocido
+    }
 
     }
+    
+    
+    
+    
+    
+    
+    
+    
+    
