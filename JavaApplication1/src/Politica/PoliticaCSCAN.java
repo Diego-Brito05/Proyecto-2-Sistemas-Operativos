@@ -46,15 +46,20 @@ public class PoliticaCSCAN implements PoliticaPlanificacion {
             planificador.setDireccion(DireccionScan.ASCENDENTE);
         }
         
-        if (mayor.estaVacia()) {
-            planificador.setCabezal(0);
-            mayor = menor;
-            menor = null;
+        if (!menor.estaVacia()) {
+            int n = menor.getTamano();
+            for (int i = 0; i < n; i++) {
+                for (int j = 0; j < n-i-1; j++) {
+                    if (menor.obtener(j).getBloqueObjetivo() > menor.obtener(j+1).getBloqueObjetivo()) {
+                        SolicitudIO temp = menor.obtener(j);
+                        menor.agregar(j, new Nodo(menor.obtener(j+1)));
+                        menor.agregar(j+1, new Nodo(temp));
+                    }
+                }
+            }
         }
         
-        SolicitudIO seleccionado = null;
-        
-        if (mayor.estaVacia()) return null;
+        if (!mayor.estaVacia()){
             int n = mayor.getTamano();
             for (int i = 0; i < n; i++) {
                 for (int j = 0; j < n-i-1; j++) {
@@ -65,12 +70,28 @@ public class PoliticaCSCAN implements PoliticaPlanificacion {
                     }
                 }
             }
-            
-            seleccionado = mayor.eliminarDelFrente();
+        } else {
+            planificador.setCabezal(0);
+            mayor = menor;
+            menor = null;
+        }
         
+        
+        SolicitudIO seleccionado = null;
+        
+        if (mayor.estaVacia()) {
+            return null;
+        }
+        seleccionado = mayor.eliminarDelFrente();
         
         while (!mayor.estaVacia()) {
             colaIO.encolar(mayor.eliminarDelFrente());
+        }
+        
+        if (menor != null){
+            while (!menor.estaVacia()){
+                colaIO.encolar(menor.eliminarDelFrente());
+            }
         }
       
         return seleccionado; 

@@ -54,9 +54,7 @@ public class PoliticaSCAN implements PoliticaPlanificacion {
         
         SolicitudIO seleccionado = null;
         
-        if (direccionActual == DireccionScan.ASCENDENTE ) {
-            // Se utiliza la lista de procesos en bloques mayores al del cabezal
-            if (mayor.estaVacia()) return null;
+        if (!mayor.estaVacia()) {
             int n = mayor.getTamano();
             for (int i = 0; i < n; i++) {
                 for (int j = 0; j < n-i-1; j++) {
@@ -67,12 +65,9 @@ public class PoliticaSCAN implements PoliticaPlanificacion {
                     }
                 }
             }
-            
-            seleccionado = mayor.eliminarDelFrente();
-            
-        } else {
-            // Se utiliza la lista de procesos en bloques menores al cabezal
-            if (menor.estaVacia()) return null;
+        }
+        
+        if (!menor.estaVacia()) {
             int n = menor.getTamano();
             for (int i = 0; i < n; i++) {
                 for (int j = 0; j < n-i-1; j++) {
@@ -83,16 +78,36 @@ public class PoliticaSCAN implements PoliticaPlanificacion {
                     }
                 }
             }
+        }
+        
+        if (direccionActual == DireccionScan.ASCENDENTE ) {
+            // Se utiliza la lista de procesos en bloques mayores al del cabezal
+            if (mayor.estaVacia()) return null;
+            seleccionado = mayor.eliminarDelFrente();
             
+        } else {
+            // Se utiliza la lista de procesos en bloques menores al cabezal
+            if (menor.estaVacia()) return null;
             seleccionado = menor.eliminarDelFrente();
         }
         
-        while (!mayor.estaVacia()) {
+        if (planificador.getDireccion() == DireccionScan.ASCENDENTE) {
+            while (!mayor.estaVacia()) {
             colaIO.encolar(mayor.eliminarDelFrente());
-        }
-        while (!menor.estaVacia()) {
+            while (!menor.estaVacia()) {
             colaIO.encolar(menor.eliminarDelFrente());
         }
+        }
+        } else {
+            while (!menor.estaVacia()) {
+            colaIO.encolar(menor.eliminarDelFrente());
+        }
+            while (!mayor.estaVacia()) {
+            colaIO.encolar(mayor.eliminarDelFrente());
+        }
+        }
+        
+        
       
         return seleccionado; 
     }

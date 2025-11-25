@@ -78,14 +78,21 @@ public class SistemaManager {
     
     public void cambiarPolitica(String Spolitica) {
         PoliticaPlanificacion politica = null;
-        if ("C-SCAN".equals(Spolitica)) {
-            politica = new PoliticaCSCAN(this.planificador);
-        } else if ("SCAN".equals(Spolitica)) {
-            politica = new PoliticaSCAN(this.planificador);
-        } else if ("SSTF".equals(Spolitica)) {
-            politica = new PoliticaSSTF();
-        } else {
+        if (null == Spolitica) {
             politica = new PoliticaFIFO();
+        } else switch (Spolitica) {
+            case "C-SCAN":
+                politica = new PoliticaCSCAN(this.planificador);
+                break;
+            case "SCAN":
+                politica = new PoliticaSCAN(this.planificador);
+                break;
+            case "SSTF":
+                politica = new PoliticaSSTF();
+                break;
+            default:
+                politica = new PoliticaFIFO();
+                break;
         }
         this.planificador.setPolitica(politica);
     }
