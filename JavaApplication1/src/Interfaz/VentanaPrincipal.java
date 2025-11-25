@@ -556,8 +556,8 @@ public class VentanaPrincipal extends javax.swing.JFrame {
                 System.out.println("¡Cambio detectado en el árbol! Actualizando JTree...");
                 actualizarArbol();
             }
-        // Para depurar, vamos a añadir logs
-        System.out.println("Actualizando vistas. Procesos en cola Bloqueado: " + sistemaManager.getColaBloqueados().getTamano());
+        // Para depurar
+        // System.out.println("Actualizando vistas. Procesos en cola Bloqueado: " + sistemaManager.getColaBloqueados().getTamano());
     }
     
     
