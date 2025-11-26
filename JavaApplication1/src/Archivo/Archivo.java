@@ -45,4 +45,8 @@ public class Archivo extends EntradaSistemaArchivos {
     public int getPrimerBloque() { return primerBloque; }
     public int getIdProcesoCreador() { return idProcesoCreador; }
     public String getColor() { return color; }
+    
+    public void setPrimerBloque(int bloque) {
+        this.primerBloque = bloque;
+    }
 }

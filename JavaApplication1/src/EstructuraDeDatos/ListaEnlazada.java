@@ -92,32 +92,32 @@ public class ListaEnlazada<T> {
     
     public void agregar(int indice, Nodo nuevo) {
         if (indice == 0) {
-            if (cabeza != null) {
-                Nodo temp = cabeza.getSiguiente();
-                cabeza.setSiguiente(nuevo.getSiguiente());
-                nuevo.setSiguiente(temp);
-            }
-            nuevo.setSiguiente(cabeza);
+            // En el caso cabeza, nuevo apunta al siguiente actual y cabeza se cambia
+            nuevo.setSiguiente(cabeza.getSiguiente());
             cabeza = nuevo;
             return;
         }
-        
+
         Nodo actual = cabeza;
         int count = 0;
-        
-        //Continua hasta la posición deseada
-        while (actual != null && count < indice-1) {
+
+        // Avanzar hasta el nodo justo antes del índice a reemplazar
+        while (actual != null && count < indice - 1) {
             actual = actual.getSiguiente();
             count++;
         }
-        
-        if (actual != null && actual.getSiguiente() != null) {
-            //El indice no está fuera de alcance de la lista
-            Nodo nodoIndex = actual.getSiguiente();
-            actual.setSiguiente(nuevo);
-            Nodo temp = nuevo.getSiguiente();
-            nuevo.setSiguiente(nodoIndex.getSiguiente());
-            nodoIndex.setSiguiente(temp);
+
+        if (actual == null || actual.getSiguiente() == null) {
+            throw new IndexOutOfBoundsException("Índice fuera de rango");
         }
+
+        // Nodo a reemplazar
+        Nodo nodoReemplazado = actual.getSiguiente();
+
+        // Ajustar apuntadores: nuevo apunta a lo siguiente del nodo que reemplaza
+        nuevo.setSiguiente(nodoReemplazado.getSiguiente());
+
+        // El anterior apunta al nuevo, que está reemplazando
+        actual.setSiguiente(nuevo);
     }
 }

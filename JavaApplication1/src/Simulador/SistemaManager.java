@@ -9,6 +9,8 @@ import Archivo.Bloque;
 import Archivo.Directorio;
 import Archivo.EntradaSistemaArchivos;
 import EstructuraDeDatos.Cola;
+import EstructuraDeDatos.ListaEnlazada;
+import EstructuraDeDatos.Nodo;
 import Politica.DireccionScan;
 import Politica.PoliticaCSCAN;
 import Politica.PoliticaFIFO;
@@ -735,6 +737,13 @@ public class SistemaManager {
     public boolean verificarYResetearCambioEnEstructura() {
         if (this.huboCambioEnEstructura) {
             this.huboCambioEnEstructura = false; // Reseteamos la bandera
+            
+            //Se crea una lista de los archivos
+            ListaEnlazada<Archivo> files = new ListaEnlazada<Archivo>();
+            duplicarArchivos(this.directorioRaiz, files);
+            ordenarArchivosAscendente(files);
+            reubicarArchivos(files);
+            
             return true; // Informamos que sí hubo un cambio
         }
         return false; // No hubo cambios
@@ -836,6 +845,56 @@ public class SistemaManager {
         
         return null; // Tipo desconocido
     }
+    
+    /**
+     * Funciones para reorganizar los archivos.
+     * 
+     */
+    
+    public void duplicarArchivos(Directorio dir, ListaEnlazada<Archivo> lista) {
+        for (int n = 0; n < dir.getContenido().getTamano(); n++) {
+            Object obj = dir.getContenido().obtener(n);
+            if (obj instanceof Archivo) {
+                lista.agregarAlFinal((Archivo) obj);
+            } else if (obj instanceof Directorio) {
+                duplicarArchivos((Directorio) obj, lista);
+            }
+        }
+    }
+    
+    public void ordenarArchivosAscendente(ListaEnlazada <Archivo> lista) {
+        if (!lista.estaVacia()) {
+            int n = lista.getTamano();
+            for (int i = 0; i < n; i++) {
+                for (int j = 0; j < n-i-1; j++) {
+                    if (lista.obtener(j).getPrimerBloque() > lista.obtener(j+1).getPrimerBloque()) {
+                        Archivo temp = lista.obtener(j);
+                        lista.agregar(j, new Nodo(lista.obtener(j+1)));
+                        lista.agregar(j+1, new Nodo(temp));
+                    }
+                }
+            }
+        }
+    }
+    
+    public void reubicarArchivos(ListaEnlazada<Archivo> lista) {
+        int siguienteBloque = 0;
+        for (int i = 0; i < lista.getTamano(); i++) {
+            Archivo archivo = lista.obtener(i);
+            int tamano = archivo.getTamanoEnBloques();
+            
+            //Asigna el nuevo bloque inicial
+            archivo.setPrimerBloque(siguienteBloque);
+            
+            //Actualiza el siguiente bloque libre
+            siguienteBloque += tamano;
+        }
+    }
+    
+    /**
+     * Otras funciones.
+     *  
+     */
     
     public boolean pausado() {
         return pausa;
