@@ -12,6 +12,7 @@ import Proceso.Proceso;
 import Simulador.SistemaManager;
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.event.ActionEvent;
@@ -25,8 +26,12 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.JSeparator;
+import javax.swing.JTable;
+import javax.swing.*;
 import javax.swing.Timer;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableCellRenderer;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
@@ -244,6 +249,7 @@ public class VentanaPrincipal extends javax.swing.JFrame {
     
     
     jTree1.setCellRenderer(new IconTreeCellRenderer());
+    this.TablaArchivos.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
     
     this.listManager = new ProcesoListManager(
              
@@ -415,6 +421,9 @@ public class VentanaPrincipal extends javax.swing.JFrame {
         
         //Aquí se actualiza el JPanelDisco
         actualizarBloquesDesdeArbol(jTree1);
+        
+        //Aquí se actualiza la tabla de asignación de archivos
+        actualizarTablaArchivos((DefaultMutableTreeNode) jTree1.getModel().getRoot());
     }
      
     /**
@@ -463,19 +472,51 @@ public class VentanaPrincipal extends javax.swing.JFrame {
     }
     
     private void recorrerNodoYMarcar(DefaultMutableTreeNode nodo) {
-    Object obj = nodo.getUserObject();
-    if (obj instanceof Archivo) {
-        Archivo archivo = (Archivo) obj;
-        for (int i = archivo.getPrimerBloque(); i < archivo.getPrimerBloque() + archivo.getTamanoEnBloques(); i++) {
-            panelDisco.setBloqueOcupado(i, true);
+        Object obj = nodo.getUserObject();
+        if (obj instanceof Archivo) {
+            Archivo archivo = (Archivo) obj;
+            for (int i = archivo.getPrimerBloque(); i < archivo.getPrimerBloque() + archivo.getTamanoEnBloques(); i++) {
+                panelDisco.setBloqueOcupado(i, true);
+            }
+        }
+
+        // Si es directorio, recorre hijos
+        for (int i = 0; i < nodo.getChildCount(); i++) {
+            recorrerNodoYMarcar((DefaultMutableTreeNode) nodo.getChildAt(i));
         }
     }
+    
+    /**
+     * Funciones para actualizar la tabla de asignación de archivos.
+     */
+    
+    private void actualizarTablaArchivos(DefaultMutableTreeNode nodoRaiz) {
+        DefaultTableModel modelo = new DefaultTableModel(
+            new String[] { "Nombre", "Bloque Inicial", "Tamaño en Bloques" }, 0
+        );
 
-    // Si es directorio, recorre hijos
-    for (int i = 0; i < nodo.getChildCount(); i++) {
-        recorrerNodoYMarcar((DefaultMutableTreeNode) nodo.getChildAt(i));
+        agregarArchivosATabla(nodoRaiz, modelo);
+
+        this.TablaArchivos.setModel(modelo);
     }
-}
+    
+    //Recorre el JTree para actualizar la tabla
+    private void agregarArchivosATabla(DefaultMutableTreeNode nodo, DefaultTableModel modelo) {
+        Object obj = nodo.getUserObject();
+        if (obj instanceof Archivo) {
+            Archivo archivo = (Archivo) obj;
+            modelo.addRow(new Object[] {
+                archivo.getNombre(),
+                archivo.getPrimerBloque(),
+                archivo.getTamanoEnBloques()
+            });
+        }
+
+        for (int i = 0; i < nodo.getChildCount(); i++) {
+            agregarArchivosATabla((DefaultMutableTreeNode) nodo.getChildAt(i), modelo);
+        }
+    }
+    
     
     /**
     * Configura y arranca el Timer que actúa como el motor principal de la simulación.
@@ -595,6 +636,8 @@ public class VentanaPrincipal extends javax.swing.JFrame {
         jScrollPane1 = new javax.swing.JScrollPane();
         jTree1 = new javax.swing.JTree();
         VisualizadorDisco = new javax.swing.JPanel();
+        jScrollPane2 = new javax.swing.JScrollPane();
+        TablaArchivos = new javax.swing.JTable();
         jPanel3 = new javax.swing.JPanel();
         jPanel13 = new javax.swing.JPanel();
         jLabel85 = new javax.swing.JLabel();
@@ -641,15 +684,34 @@ public class VentanaPrincipal extends javax.swing.JFrame {
 
         Configuracion.addTab("Arbol", Arbol);
 
+        TablaArchivos.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+                {null, null, null},
+                {null, null, null},
+                {null, null, null},
+                {null, null, null}
+            },
+            new String [] {
+                "Nombre", "Bloque Inicial", "Tamaño en Bloques"
+            }
+        ));
+        jScrollPane2.setViewportView(TablaArchivos);
+
         javax.swing.GroupLayout VisualizadorDiscoLayout = new javax.swing.GroupLayout(VisualizadorDisco);
         VisualizadorDisco.setLayout(VisualizadorDiscoLayout);
         VisualizadorDiscoLayout.setHorizontalGroup(
             VisualizadorDiscoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 1593, Short.MAX_VALUE)
+            .addGroup(VisualizadorDiscoLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 1035, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(552, Short.MAX_VALUE))
         );
         VisualizadorDiscoLayout.setVerticalGroup(
             VisualizadorDiscoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 786, Short.MAX_VALUE)
+            .addGroup(VisualizadorDiscoLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 735, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(45, Short.MAX_VALUE))
         );
 
         Configuracion.addTab("Tabla de asignacion de archivos", VisualizadorDisco);
@@ -1065,6 +1127,7 @@ public class VentanaPrincipal extends javax.swing.JFrame {
     private javax.swing.JList<Proceso> ListaTerminado;
     private javax.swing.JComboBox<String> PoliticaPlanificacion;
     private javax.swing.JPanel Simulador;
+    private javax.swing.JTable TablaArchivos;
     private javax.swing.JPanel VisualizadorDisco;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel27;
@@ -1083,6 +1146,7 @@ public class VentanaPrincipal extends javax.swing.JFrame {
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane17;
     private javax.swing.JScrollPane jScrollPane18;
+    private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JScrollPane jScrollPane24;
     private javax.swing.JTree jTree1;
     private javax.swing.JTextArea modoAct;
