@@ -5,6 +5,7 @@
 package Interfaz;
 
 import Archivo.Archivo;
+import Archivo.Bloque;
 import Archivo.Directorio;
 import Archivo.EntradaSistemaArchivos;
 import EstructuraDeDatos.Cola;
@@ -473,14 +474,40 @@ public class VentanaPrincipal extends javax.swing.JFrame {
     
     private void recorrerNodoYMarcar(DefaultMutableTreeNode nodo) {
         Object obj = nodo.getUserObject();
+
         if (obj instanceof Archivo) {
             Archivo archivo = (Archivo) obj;
-            for (int i = archivo.getPrimerBloque(); i < archivo.getPrimerBloque() + archivo.getTamanoEnBloques(); i++) {
-                panelDisco.setBloqueOcupado(i, true);
+
+            // --- LÓGICA CORREGIDA PARA ASIGNACIÓN ENCADENADA ---
+
+            int primerBloque = archivo.getPrimerBloque();
+
+            if (primerBloque != -1) {
+                // 1. Marcar el primer bloque como "primer bloque" (amarillo) y ocupado.
+                panelDisco.setEsPrimerBloque(primerBloque, true);
+                panelDisco.setBloqueOcupado(primerBloque, true);
+
+                // 2. Obtener la referencia al disco desde el SistemaManager.
+                Bloque[] disco = sistemaManager.getDisco();
+                if (disco == null) return;
+
+                // 3. Recorrer la cadena de bloques para marcar los demás.
+                int bloqueActualIdx = disco[primerBloque].getSiguienteBloque();
+
+                while (bloqueActualIdx != Bloque.FIN_DE_ARCHIVO) {
+                    if (bloqueActualIdx >= 0 && bloqueActualIdx < disco.length) {
+                        // Marcar los bloques siguientes solo como ocupados (verde).
+                        panelDisco.setBloqueOcupado(bloqueActualIdx, true);
+                        bloqueActualIdx = disco[bloqueActualIdx].getSiguienteBloque();
+                    } else {
+                        System.err.println("Error: Puntero de bloque inválido en archivo '" + archivo.getNombre() + "'");
+                        break; // Salir del bucle para evitar errores.
+                    }
+                }
             }
         }
 
-        // Si es directorio, recorre hijos
+        // La lógica para recorrer los hijos se queda igual.
         for (int i = 0; i < nodo.getChildCount(); i++) {
             recorrerNodoYMarcar((DefaultMutableTreeNode) nodo.getChildAt(i));
         }

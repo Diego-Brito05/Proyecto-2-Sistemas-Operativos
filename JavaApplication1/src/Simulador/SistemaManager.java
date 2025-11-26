@@ -394,7 +394,7 @@ public class SistemaManager {
                 }
 
                 // Marcar el bloque como ocupado
-                disco[bloqueLibre].ocupar(solicitud.getIdProceso());
+                getDisco()[bloqueLibre].ocupar(solicitud.getIdProceso());
                 System.out.println("Asignando bloque " + bloqueLibre + " al archivo '" + nombreArchivo + "'.");
 
                 if (primerBloqueAsignado == -1) {
@@ -404,7 +404,7 @@ public class SistemaManager {
 
                 if (bloqueAnterior != -1) {
                     // Si ya teníamos un bloque asignado, lo encadenamos a este nuevo
-                    disco[bloqueAnterior].setSiguienteBloque(bloqueLibre);
+                    getDisco()[bloqueAnterior].setSiguienteBloque(bloqueLibre);
                 }
 
                 // Actualizamos nuestras variables para la siguiente iteración
@@ -415,7 +415,7 @@ public class SistemaManager {
 
             // El último bloque de la cadena debe apuntar a FIN_DE_ARCHIVO
             if (bloqueAnterior != -1) {
-                disco[bloqueAnterior].setSiguienteBloque(Bloque.FIN_DE_ARCHIVO);
+                getDisco()[bloqueAnterior].setSiguienteBloque(Bloque.FIN_DE_ARCHIVO);
             }
 
 
@@ -424,8 +424,7 @@ public class SistemaManager {
 
             // Lo añadimos al directorio.
             boolean exito = padre.agregarEntrada(nuevoArchivo);
-
-            // --- ¡LÍNEA FALTANTE! ---
+            
             if (exito) {
                 // Si el archivo se agregó correctamente al directorio, activamos la bandera.
                 this.huboCambioEnEstructura = true;
@@ -536,8 +535,8 @@ public class SistemaManager {
 
             while (bloqueActual != Bloque.FIN_DE_ARCHIVO) {
                 if (bloqueActual >= 0 && bloqueActual < TAMANO_DISCO) {
-                    int siguienteBloque = disco[bloqueActual].getSiguienteBloque();
-                    disco[bloqueActual].liberar();
+                    int siguienteBloque = getDisco()[bloqueActual].getSiguienteBloque();
+                    getDisco()[bloqueActual].liberar();
                     System.out.println("Bloque " + bloqueActual + " liberado para archivo '" + archivo.getNombre() + "'.");
                     bloqueActual = siguienteBloque;
                 } else {
@@ -625,7 +624,7 @@ public class SistemaManager {
     private int contarBloquesLibres() {
         int contador = 0;
         for (int i = 0; i < TAMANO_DISCO; i++) {
-            if (disco[i] != null && !disco[i].isOcupado()) {
+            if (getDisco()[i] != null && !disco[i].isOcupado()) {
                 contador++;
             }
         }
@@ -640,7 +639,7 @@ public class SistemaManager {
     */
     private int encontrarSiguienteBloqueLibre(int inicio) {
         for (int i = inicio; i < TAMANO_DISCO; i++) {
-            if (disco[i] != null && !disco[i].isOcupado()) {
+            if (getDisco()[i] != null && !disco[i].isOcupado()) {
                 return i;
             }
         }
@@ -845,6 +844,9 @@ public class SistemaManager {
     public void setPausa(boolean newPausa) {
         this.pausa = newPausa;
     }
+
+    
+    public Bloque[] getDisco() {return disco;}
 
     }
     
