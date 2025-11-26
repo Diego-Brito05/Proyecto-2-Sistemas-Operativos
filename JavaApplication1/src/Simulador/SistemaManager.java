@@ -883,6 +883,14 @@ public class SistemaManager {
             Archivo archivo = lista.obtener(i);
             int tamano = archivo.getTamanoEnBloques();
             
+            for (int j = 0; j < archivo.getTamanoEnBloques(); j++) {
+                if (j == archivo.getTamanoEnBloques() - 1) {
+                    disco[siguienteBloque + j].setSiguienteBloque(Bloque.FIN_DE_ARCHIVO);
+                } else {
+                    disco[siguienteBloque + j].setSiguienteBloque(siguienteBloque + j + 1);
+                }
+            }
+            
             //Asigna el nuevo bloque inicial
             archivo.setPrimerBloque(siguienteBloque);
             
