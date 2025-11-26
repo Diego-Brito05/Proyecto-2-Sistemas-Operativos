@@ -666,6 +666,7 @@ public class VentanaPrincipal extends javax.swing.JFrame {
         CambiarPolitica = new javax.swing.JButton();
         jPanel2 = new javax.swing.JPanel();
         JPanelDisco = new PanelDisco(200, 20);
+        BotonPausa = new javax.swing.JToggleButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -888,6 +889,18 @@ public class VentanaPrincipal extends javax.swing.JFrame {
         JPanelDisco.setLayout(new java.awt.BorderLayout());
         jPanel2.add(JPanelDisco, java.awt.BorderLayout.CENTER);
 
+        BotonPausa.setText("Pausar");
+        BotonPausa.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                BotonPausaMouseClicked(evt);
+            }
+        });
+        BotonPausa.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                BotonPausaActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout SimuladorLayout = new javax.swing.GroupLayout(Simulador);
         Simulador.setLayout(SimuladorLayout);
         SimuladorLayout.setHorizontalGroup(
@@ -906,28 +919,32 @@ public class VentanaPrincipal extends javax.swing.JFrame {
                 .addComponent(jLabel1)
                 .addGap(440, 440, 440))
             .addGroup(SimuladorLayout.createSequentialGroup()
+                .addGap(633, 633, 633)
+                .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, 840, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(120, Short.MAX_VALUE))
+            .addGroup(SimuladorLayout.createSequentialGroup()
+                .addGap(86, 86, 86)
+                .addGroup(SimuladorLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addGroup(SimuladorLayout.createSequentialGroup()
+                        .addComponent(jScrollPane24, javax.swing.GroupLayout.PREFERRED_SIZE, 116, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(18, 18, 18)
+                        .addComponent(jScrollPane17, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(18, 18, 18)
+                        .addComponent(jScrollPane18, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(SimuladorLayout.createSequentialGroup()
+                        .addComponent(jLabel33, javax.swing.GroupLayout.PREFERRED_SIZE, 70, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(modoAct, javax.swing.GroupLayout.PREFERRED_SIZE, 146, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(modoToggleButton)))
                 .addGroup(SimuladorLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(SimuladorLayout.createSequentialGroup()
-                        .addGap(86, 86, 86)
-                        .addGroup(SimuladorLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addGroup(SimuladorLayout.createSequentialGroup()
-                                .addComponent(jScrollPane24, javax.swing.GroupLayout.PREFERRED_SIZE, 116, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(18, 18, 18)
-                                .addComponent(jScrollPane17, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(18, 18, 18)
-                                .addComponent(jScrollPane18, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addGroup(SimuladorLayout.createSequentialGroup()
-                                .addComponent(jLabel33, javax.swing.GroupLayout.PREFERRED_SIZE, 70, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(modoAct, javax.swing.GroupLayout.PREFERRED_SIZE, 146, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addComponent(modoToggleButton)))
                         .addGap(76, 76, 76)
                         .addComponent(jLabel34, javax.swing.GroupLayout.PREFERRED_SIZE, 98, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(SimuladorLayout.createSequentialGroup()
-                        .addGap(633, 633, 633)
-                        .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, 840, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap(120, Short.MAX_VALUE))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, SimuladorLayout.createSequentialGroup()
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(BotonPausa, javax.swing.GroupLayout.PREFERRED_SIZE, 172, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(463, 463, 463))))
         );
         SimuladorLayout.setVerticalGroup(
             SimuladorLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -958,7 +975,9 @@ public class VentanaPrincipal extends javax.swing.JFrame {
                                 .addGap(0, 0, Short.MAX_VALUE))))
                     .addGroup(SimuladorLayout.createSequentialGroup()
                         .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, 420, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(0, 163, Short.MAX_VALUE)))
+                        .addGap(77, 77, 77)
+                        .addComponent(BotonPausa)
+                        .addGap(0, 63, Short.MAX_VALUE)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(SimuladorLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, SimuladorLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
@@ -1090,6 +1109,21 @@ public class VentanaPrincipal extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_GuardarConfigActionPerformed
 
+    private void BotonPausaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BotonPausaActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_BotonPausaActionPerformed
+
+    private void BotonPausaMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_BotonPausaMouseClicked
+        // TODO add your handling code here:
+        if (this.sistemaManager.pausado()) {
+            sistemaManager.setPausa(false);
+            this.BotonPausa.setText("Pausar");
+        } else {
+            sistemaManager.setPausa(true);
+            this.BotonPausa.setText("Renaudar");
+        }
+    }//GEN-LAST:event_BotonPausaMouseClicked
+
     /**
      * @param args the command line arguments
      */
@@ -1117,6 +1151,7 @@ public class VentanaPrincipal extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel Arbol;
+    private javax.swing.JToggleButton BotonPausa;
     private javax.swing.JButton CambiarPolitica;
     private javax.swing.JButton CargarConfig;
     private javax.swing.JTabbedPane Configuracion;

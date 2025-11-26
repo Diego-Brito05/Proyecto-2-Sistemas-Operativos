@@ -56,6 +56,9 @@ public class SistemaManager {
     // Cola de E/S y Planificador
     private Cola<SolicitudIO> colaIO;
     private PlanificadorDisco planificador;
+    
+    // Variable de pausa
+    private boolean pausa;
 
     public SistemaManager() {
         inicializarDisco();
@@ -68,6 +71,7 @@ public class SistemaManager {
         
         this.colaIO = new Cola<>();
         this.planificador = new PlanificadorDisco();
+        this.pausa = false;
     }
     
     /**
@@ -232,6 +236,11 @@ public class SistemaManager {
     * Si no hay operación en curso, inicia una nueva desde la cola de bloqueados.
     */
     public void procesarSiguienteSolicitudIO() {
+       // Caso 0: Está pausado.
+       if (this.pausa) {
+           return; //Salimos ya que el sistema está pausado.
+       }
+       
         // --- CASO 1: Hay una operación en curso ---
         if (procesoEnEjecucionIO != null) {
             // Descontamos el tiempo de un "tick"
@@ -827,6 +836,14 @@ public class SistemaManager {
         }
         
         return null; // Tipo desconocido
+    }
+    
+    public boolean pausado() {
+        return pausa;
+    }
+    
+    public void setPausa(boolean newPausa) {
+        this.pausa = newPausa;
     }
 
     }
