@@ -897,6 +897,10 @@ public class SistemaManager {
             //Actualiza el siguiente bloque libre
             siguienteBloque += tamano;
         }
+        
+        for (int i = siguienteBloque; i < TAMANO_DISCO; i++) {
+            disco[i].liberar();
+        }
     }
     
     /**
